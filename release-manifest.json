@@ -1,0 +1,17 @@
+{
+  "project": "ackerzeit",
+  "format": 1,
+  "version": "0.1.0",
+  "files": {
+    ".gitignore": "55cbbc997b4809aa717757273157db8c7234057ba8e05a42146e2e17cbc49207",
+    ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "README.md": "2d8b443016d70339d3d0bafeb9cd10c6862d90cee7902f86f044c3001bdf43fb",
+    "TESTBERICHT.md": "6f1befc8deae119663057d9ad2279906ff279bb50a9f0dea01edee480fe8a640",
+    "app.js": "08a2a7e3bc21114851361082343e2eca9c3c054367c793c3f3f3032120c51c1c",
+    "engine.js": "22cc4e1a8d0add077aab1714029fff28e088210a4df13ed03b40624b725c24f7",
+    "index.html": "c6a8e2bd1209b18acc676f0848db3b634ab5f10a02abb1825c0a630b6d38e11f",
+    "style.css": "99eec4e9293bb8c37bec80a21483ccad1cd45532720f7316bbebdeec6ba195dd",
+    "tests/engine.test.cjs": "56b59f12431a974428c185b97d2b2ea0cb50a5f9194e0dc2774cc12632770da7",
+    "update.sh": "659368fd421406f658f441064323b336ecd43e37ca595d704ccb3f24c3e89567"
+  }
+}
