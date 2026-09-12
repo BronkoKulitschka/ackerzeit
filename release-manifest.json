@@ -1,17 +1,19 @@
 {
   "project": "ackerzeit",
   "format": 1,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "files": {
     ".gitignore": "55cbbc997b4809aa717757273157db8c7234057ba8e05a42146e2e17cbc49207",
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "README.md": "2d8b443016d70339d3d0bafeb9cd10c6862d90cee7902f86f044c3001bdf43fb",
-    "TESTBERICHT.md": "6f1befc8deae119663057d9ad2279906ff279bb50a9f0dea01edee480fe8a640",
-    "app.js": "08a2a7e3bc21114851361082343e2eca9c3c054367c793c3f3f3032120c51c1c",
+    "README.md": "320165da9c90f80e0d36c30b0c6252deeecbf3b92ad7d06f6dcac20c18a985e5",
+    "TESTBERICHT.md": "7c08086e0a2b5a4e675fee55ced4b077e447bc1691cd82509fa43bc5c18657c9",
+    "app.js": "77abedf62b71b136244341305b298079ba8213c82ff2ee20e224a716d3ee6b8a",
     "engine.js": "22cc4e1a8d0add077aab1714029fff28e088210a4df13ed03b40624b725c24f7",
-    "index.html": "c6a8e2bd1209b18acc676f0848db3b634ab5f10a02abb1825c0a630b6d38e11f",
-    "style.css": "99eec4e9293bb8c37bec80a21483ccad1cd45532720f7316bbebdeec6ba195dd",
+    "index.html": "ecb9ffeb9039f4392a88c377ededfeb05d2579f4d4b1c7cbdb1318c8b2fec4cc",
+    "isometric.js": "cd9020f75fe214a5847b71cd08600adecf1fef3783cd417689193e9aeca40dff",
+    "style.css": "e23a6f3cab9e43e72c0b6ab51ce81cea47ed1beb4fe9497be91809ed5a7b4546",
     "tests/engine.test.cjs": "56b59f12431a974428c185b97d2b2ea0cb50a5f9194e0dc2774cc12632770da7",
+    "tests/isometric.test.cjs": "c67b1a99746ef923f3e4e145f88e1dd32b0ba9e22087f6b7a8ee39713b939f40",
     "update.sh": "659368fd421406f658f441064323b336ecd43e37ca595d704ccb3f24c3e89567"
   }
 }

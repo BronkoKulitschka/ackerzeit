@@ -1,6 +1,17 @@
-# Ackerzeit · Farm Manager 0.1.0
+# Ackerzeit · Farm Manager 0.1.1
 
 Ein deutschsprachiger Browser-Prototyp: Pixelart-Hofkarte, Managementmenüs und ein spielbares Ackerbaujahr. Reines HTML, CSS und JavaScript. Keine Installation von npm-Paketen, kein Build, keine externen Schriftarten oder Bilddateien.
+
+## Neu in Version 0.1.1
+
+- Echte isometrische 2:1-Pixelansicht mit räumlichen Gebäuden, Feldrauten, Bäumen und sichtbarer Bodenkante.
+- Fahrender Traktor mit Anbaugerät oder Mähdrescher als Vorschau des ersten ausführbaren Feldauftrags. Bei blockierten Aufträgen bleibt die Maschine am Hof.
+- Bewegter Schornsteinrauch, Windrad, Vögel und wetterabhängiger Regen oder Schnee.
+- Animation pausieren/starten; Betriebssystem-Einstellung für reduzierte Bewegung wird berücksichtigt.
+- Höchstens 20 Animationsbilder pro Sekunde. Keine Animationsschleife bei unsichtbarem Tab, außerhalb des sichtbaren Kartenbereichs oder nach Verlassen der Hofansicht.
+- Antippen trifft die isometrischen Feldflächen. Die Feldschaltflächen bleiben als Alternative verfügbar.
+
+Die Animation ist eine **Arbeitsvorschau**. Fortschritt, Arbeitsverbrauch und Wachstum laufen weiterhin über den Tageswechsel. Bestehende Spielstände aus 0.1.0 sind kompatibel; das Format und der Spielkern bleiben gleich. Das bisherige `update.sh` kann das neue ZIP übernehmen.
 
 ## Enthalten
 
@@ -17,7 +28,7 @@ Ein deutschsprachiger Browser-Prototyp: Pixelart-Hofkarte, Managementmenüs und 
 ## Schnellstart in Termux
 
 1. Erstelle auf GitHub ein **eigenes, leeres Repository**, beispielsweise `farm-manager`. Wähle für kostenloses GitHub Pages ein öffentliches Repository. Eine README im ansonsten leeren Repository ist ebenfalls möglich.
-2. Lade `ackerzeit-v0.1.0.zip` und die separat bereitgestellte `update.sh` in den Android-Ordner **Download**.
+2. Lade `ackerzeit-v0.1.1.zip` und die separat bereitgestellte `update.sh` in den Android-Ordner **Download**.
 3. Führe einmalig in Termux aus:
 
 ```bash
@@ -34,7 +45,7 @@ Erlaube Termux den Speicherzugriff. Folge beim GitHub-Login dem angezeigten Ger�
 4. Erster Upload – `DEIN-NAME/farm-manager` durch dein echtes Repository ersetzen:
 
 ```bash
-bash ~/update.sh ~/storage/downloads/ackerzeit-v0.1.0.zip DEIN-NAME/farm-manager
+bash ~/update.sh ~/storage/downloads/ackerzeit-v0.1.1.zip DEIN-NAME/farm-manager
 ```
 
 Das Skript prüft das ZIP, klont das Repository nach `~/ackerzeit-repos/DEIN-NAME/farm-manager`, übernimmt die Projektdateien, erstellt einen Commit und pusht auf den Standardbranch. Falls Git noch keine Autorenangaben hat, verwendet es lokal im Projekt deinen GitHub-Namen und deine GitHub-No-Reply-Adresse. Das zuletzt erfolgreich verwendete Repository wird gespeichert.
@@ -45,13 +56,13 @@ Beim üblichen Repositorynamen lautet er `https://DEIN-NAME.github.io/farm-manag
 
 ## Spätere Updates
 
-Lade die neue ZIP herunter und rufe dasselbe Skript mit dem neuen Dateinamen auf:
+Lade die aktuelle ZIP herunter und aktualisiere dein Repository:
 
 ```bash
-bash ~/update.sh ~/storage/downloads/ackerzeit-v0.1.1.zip
+bash ~/update.sh ~/storage/downloads/ackerzeit-v0.1.1.zip BronkoKulitschka/ackerzeit
 ```
 
-`v0.1.1` ist hier ein Beispiel für eine zukünftige Version, kein im Paket enthaltener Download. Entpacken von Hand ist nicht notwendig. Der Spielstand liegt im Browser und wird durch Git-Updates nicht gelöscht. Die aktuelle Version kann Spielstände des Formats 1 lesen.
+Entpacken von Hand ist nicht notwendig. Der Spielstand liegt im Browser und wird durch Git-Updates nicht gelöscht. Die aktuelle Version kann Spielstände des Formats 1 lesen.
 
 Das Skript im Repository wird mit jedem Paket aktualisiert. Wenn eine neue Skriptversion mitgeliefert wurde, kopiere sie für spätere Aufrufe aus `~/ackerzeit-repos/DEIN-NAME/farm-manager/update.sh` nach `~/update.sh` oder lade die separat gelieferte Version herunter.
 
@@ -68,7 +79,7 @@ Das Skript im Repository wird mit jedem Paket aktualisiert. Wenn eine neue Skrip
 ZIP-Prüfung ohne Git-Anmeldung oder Upload:
 
 ```bash
-bash ~/update.sh --check ~/storage/downloads/ackerzeit-v0.1.0.zip
+bash ~/update.sh --check ~/storage/downloads/ackerzeit-v0.1.1.zip
 ```
 
 ## Ohne Veröffentlichung lokal spielen
@@ -106,7 +117,8 @@ Tierhaltung, frei platzierbare Gebäude, mehrere Traktoren, Personal, detaillier
 | `index.html` | Einstieg und Grundgerüst |
 | `style.css` | Responsive Oberfläche |
 | `engine.js` | Spielregeln und Spielstandprüfung, unabhängig von der Oberfläche |
-| `app.js` | Menüs, Bedienung, Speichern und dynamische Pixelart-Karte |
+| `app.js` | Menüs, Bedienung, Speichern und Kartenanbindung |
+| `isometric.js` | Isometrische Pixelgrafik, Feldauswahl und Animationssteuerung |
 | `update.sh` | ZIP prüfen und per Git auf GitHub aktualisieren |
 | `release-manifest.json` | Paketversion und SHA-256-Dateiprüfsummen |
 | `tests/engine.test.cjs` | Reproduzierbare Prüfung der Simulation |
@@ -114,7 +126,7 @@ Tierhaltung, frei platzierbare Gebäude, mehrere Traktoren, Personal, detaillier
 Optionaler Entwicklertest mit Node.js:
 
 ```bash
-node --test tests/engine.test.cjs
+node --test tests/*.test.cjs
 ```
 
 Die Pixelgrafik entsteht aus eigenen Canvas-Sprites. Keine Bildlizenz oder Online-Verbindung wird zum Laden des Spiels benötigt. Die Weiterentwicklung erfolgt in kleinen, vollständig spielbaren Schritten.

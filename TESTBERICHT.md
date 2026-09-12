@@ -1,8 +1,16 @@
-# Prüfstand · Ackerzeit 0.1.0
+# Prüfstand · Ackerzeit 0.1.1
 
 Stand: 12. September 2026.
 
-## Bestanden
+## Prüfungen des Updates 0.1.1
+
+- Alle 14 automatisierten Tests bestehen: die bisherigen zehn Simulationstests sowie vier neue Prüfungen für isometrische Feldauswahl, ausführbare Arbeitsvorschau, unveränderte Spielstände beim Rendern und Animationssteuerung einschließlich Sichtbarkeit, Pause und Aufräumen bei Navigation.
+- Die Menü- und Bedienlogik wurde mit der neuen Kartenanbindung in einer simulierten DOM-Umgebung erneut geprüft. Der Pause-/Startknopf ist enthalten.
+- Die neue Karte wurde mit dem tatsächlichen Canvas-Renderer als Einzelbilder und Animationsfolge erzeugt und visuell geprüft. Das ist keine Browser-Screenshot-Prüfung.
+- Der Spielkern `engine.js` ist bytegleich mit Version 0.1.0. Das Spielstandformat bleibt 1.
+- Die vollständige Darstellung im Browser und auf einem echten Smartphone ist weiterhin nicht geprüft. Die zuvor festgestellte Zugriffsbeschränkung des verfügbaren Browsers besteht als offene Testgrenze.
+
+## Bisherige Prüfungen aus 0.1.0
 
 - JavaScript-Syntaxprüfung für Spielkern und Oberfläche; Bash-Syntaxprüfung des Upload-Skripts.
 - Zehn automatisierte Spielkerntests, ausführbar mit `node --test tests/engine.test.cjs`.
