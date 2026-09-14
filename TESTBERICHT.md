@@ -1,60 +1,41 @@
-# Prüfbericht · Ackerzeit 0.2.0
+# Prüfbericht · Ackerzeit 0.3.0
 
-Abgeschlossen am 14. September 2026. Grundlage des Umbaus: Git-Commit `07eaa00` (Ackerzeit 0.1.1).
+14. September 2026. Grundlage: vorhandenes Ackerzeit-Repository, Commit `07eaa00` (0.1.1), darauf der lokale 0.2.0-Umbau mit Farmall und 3D-Hof.
 
-## Simulation und Fahrwege
+## Simulation und Arbeitsbahnen
 
-**14 automatisierte Tests erfolgreich**, ausführbar mit:
+**21 automatisierte Tests erfolgreich**, ausführbar mit `node --test tests/*.test.cjs`.
 
-```bash
-node --test tests/*.test.cjs
-```
+- Zehn vorhandene Simulationstests: Aussaatfenster, Reservierungen, Wetterpausen, Tageskapazität, Stornierungen, Lagergrenzen, Wartung, Kredite, Schaltjahre und ein 570-Tage-Anbauzyklus.
+- Vier Prüfungen zu Hindernissen, unerreichbaren Zielen, Fahrzeugpositionen und Modellkatalog.
+- Sieben neue Prüfungen: einmalige Reservierung beim Arbeitsbeginn; nur ein aktiver Einsatz; exakter Abschluss ohne doppelte Buchung; Betriebsstunden und Verschleiß bei kleinen Fortschrittsschritten; Unterbrechen und Fortsetzen nach Serialisierung; anteilige Rückerstattung beim Abbrechen; Tageswechsel ohne automatische Auftragserledigung; tägliches Stundenlimit; Wetter- und Zustandsblockaden; alle vier Tätigkeitsarten inklusive Ernte; Übernahme alter geplanter Aufträge ohne erneute Kosten; Arbeitsbahnen innerhalb der Felder und Wiederaufnahme mitten in einer Bahn.
 
-- Die zehn bisherigen Simulationstests bestehen unverändert. Sie prüfen unter anderem Aussaatfenster, Materialreservierung, Wetterpausen, Tageskapazität, Stornierungen, Lagergrenzen, Wartung, Kredite, Schaltjahre und einen 570-Tage-Anbauzyklus mit Sommergerste und Winterweizen.
-- Vier neue Tests prüfen Fahrwege um Gebäude mit Sicherheitsabstand, Ablehnung unerreichbarer Ziele, ungültige Fahrzeugpositionen, den Modellkatalog und die unveränderte Simulation beim Berechnen von Fahrwegen.
-- `engine.js` und `update.sh` sind bytegleich mit dem vorhandenen 0.1.1-Repository.
-- Das Spielstandformat bleibt 1. `world3d.tractor` ist eine optionale Fahrzeugposition. Spielstände ohne diesen Eintrag funktionieren weiter.
+Das Spielstandformat bleibt Version 1 und bekommt optionale Angaben für Tagesstunden sowie laufende und unterbrochene Arbeiten. Die Simulation wurde für direkte Arbeit erweitert. Das Termux-Skript bleibt unverändert.
 
-## Tatsächliche Browserprüfung
+## Browserprüfung
 
-Headless Chromium 138 mit Software-WebGL (SwiftShader) und Playwright. Die Ansicht wurde im Browser gerendert und als Screenshot geprüft.
+Headless Chromium 138 mit Software-WebGL (SwiftShader), gesteuert durch Playwright. Tatsächliche Canvas-Darstellung und Screenshots, kein reines HTML-Mockup.
 
-| Bildschirm | Seite ohne Überlauf | Fahren / Pause / Stopp | Aufträge / Tageswechsel | Menüs / Speichern / Neuladen |
-|---|---|---|---|---|
-| 390 × 844 | bestanden | bestanden | bestanden | bestanden |
-| 360 × 640 | bestanden | bestanden | bestanden | bestanden |
-| 844 × 390 | bestanden | bestanden | bestanden | bestanden |
-| 1365 × 900 | bestanden | bestanden | bestanden | bestanden |
+| Bildschirm | Direkt starten und sichtbare Bearbeitung | Unterbrechen, Neuladen, Fortsetzen | Bodenbearbeitung, Aussaat, Tageswechsel |
+|---|---|---|---|
+| 390 × 844 | bestanden | bestanden | bestanden |
+| 844 × 390 | bestanden | bestanden | bestanden |
+| 1365 × 900 | bestanden | bestanden | bestanden |
 
-- Hochformatprüfungen mit aktivierter Touch-Emulation; Fahrziele tatsächlich per Touch-Ereignis gesetzt.
-- Kein horizontaler oder vertikaler Überlauf der gesamten Seite. Lange Verwaltungsbereiche und die Felddetails besitzen einen eigenen Scrollbereich.
-- Fahrzeugposition ändert sich bei der Fahrt; Datum, Kontostand und Dieselbestand bleiben dabei unverändert.
-- Ein echter Bodenbearbeitungsauftrag wurde geplant und über den Tageswechsel abgeschlossen.
-- Alle Verwaltungsmenüs wurden geöffnet. Nach Verlassen des Hofs verbleibt kein Karten-Canvas im sichtbaren Dokument; bei Rückkehr wird genau eine Ansicht eingebunden.
-- Gespeicherte Fahrzeugposition und Wirtschaftstag bleiben nach Neuladen erhalten.
-- Eine absichtlich beschädigte vorhandene Speicherung wird angezeigt und nicht überschrieben.
-- Keine ungefangenen JavaScript-Fehler oder fehlgeschlagenen Netzwerkzugriffe in den vier Prüfläufen.
-- Alle Laufzeitressourcen kamen vom lokalen Spielserver oder aus lokalen Blob-/Data-URLs; kein CDN-Zugriff.
-- Nach einer visuellen Korrektur bleibt der Traktor auch in der Nahansicht im Querformat vollständig sichtbar.
+Die Prüfungen bestätigen, dass Feldarbeit vor dem Tageswechsel abgeschlossen wird, Material nur einmal reserviert wird und Arbeitsstunden exakt gebucht werden. Keine ungefangenen JavaScript-Fehler in diesen Läufen. Die gesamte Seite bleibt ohne horizontalen oder vertikalen Überlauf. Hochformat wurde mit mobiler Ansicht und Touch-Unterstützung emuliert.
 
-Der reproduzierbare Browsertest liegt in `tests/browser-check.cjs`. Er benötigt für die Entwicklung Node.js, Playwright und dessen Chromium-Installation, die nicht zum Laufzeitpaket des Spiels gehören:
+**Abschließender zusätzlicher Lauf bei 360 × 640 bestanden:** Bodenbearbeitung, Aussaat, Düngung und sichtbare Ernte; Unterbrechen, Neuladen und Fortsetzen; Tageswechsel und Seite ohne Überlauf. Keine ungefangenen JavaScript-Fehler. Die Geräteangaben wurden in diesem Lauf bereits angezeigt.
 
-```bash
-node tests/browser-check.cjs
-```
-
-Optional kann `PLAYWRIGHT_CHROMIUM_EXECUTABLE` auf eine eigene Chromium-Datei zeigen. Screenshots und Ergebnis-JSON werden standardmäßig im temporären Systemordner `ackerzeit-browser-qa` abgelegt; `ACKERZEIT_TEST_OUTPUT` überschreibt dieses Ziel. Der Test öffnet ausschließlich einen lokalen Server auf Port 8089.
+Reproduzierbar mit `node tests/browser-check.cjs`. Benötigt Node.js, Playwright und Chromium als Entwicklungswerkzeuge. `PLAYWRIGHT_CHROMIUM_EXECUTABLE` kann auf eine eigene Chromium-Datei zeigen. `ACKERZEIT_TEST_OUTPUT` überschreibt den standardmäßigen temporären Ausgabeordner; `ACKERZEIT_TEST_COMPACT=1` führt den erweiterten Test nur bei 360 × 640 aus. Der lokale Testserver läuft auf Port 8089.
 
 ## Modell und Paket
 
-- Der Farmall stammt aus dem bereits erstellten GLB-Modell mit 23.090 Dreiecken und eingebetteter Beschriftung.
-- Das Modell war beim Erstellen mit dem Khronos glTF Validator geprüft worden: keine Fehler und keine Warnungen. Zusätzlich wurde der tatsächliche Import in Three.js im Browser erfolgreich geprüft.
-- Three.js 0.180.0 liegt mit benötigten Zusatzmodulen und MIT-Lizenz vollständig lokal bei.
-- JavaScript-Syntaxprüfung sowie Bash-Syntaxprüfung erfolgreich.
-- Das Release verwendet den vom bestehenden Updater erwarteten Ordner `farm-manager/` und ein vollständiges SHA-256-Manifest. Die Paketprüfung mit dem unveränderten `update.sh --check` wurde erfolgreich ausgeführt.
+Der Farmall ist das zuvor erstellte GLB-Modell mit 23.090 Dreiecken. Bei seiner Erstellung: Khronos glTF Validator ohne Fehler und Warnungen. Der tatsächliche Import in Three.js wurde in den Browserprüfungen bestätigt. Geräte und Mähdrescher sind einfache eigenständige Code-Geometrien.
 
-## Grenzen der Prüfung
+Die Veröffentlichung verwendet den vom vorhandenen Updater erwarteten Ordner `farm-manager/` und ein vollständiges SHA-256-Manifest. Die abschließende ZIP-Prüfung mit `update.sh --check` wird mit der Paketerstellung ausgeführt.
 
-Kein Test auf einem physischen Android-Gerät, keine Messung der tatsächlichen Geräte-FPS und kein echter Termux-/GitHub-Push. Die Bildschirm- und Touch-Prüfung im Browser ersetzt keinen Hardwaretest. Das fertige ZIP wird vom Nutzer über den bestehenden Termux-Workflow veröffentlicht.
+## Grenzen
 
-Freie Fahrt ist eine vereinfachte Hofsteuerung. Anhänger, Ankuppeln, Ladung, Anbaugeräte, physikalisches Rangieren und zusätzliche steuerbare Fahrzeuge sind noch nicht enthalten. Die wirtschaftlichen Arbeitswerte bleiben aus 0.1.1 erhalten und sind keine neu kalibrierten Leistungsdaten des Farmall.
+Kein physisches Android-Gerät, keine Geräte-FPS-Messung und kein echter Termux-/GitHub-Push. Veröffentlichung durch den Nutzer über den vorhandenen Workflow.
+
+Die Feldarbeit wird von der aktiven 3D-Ansicht ausgeführt und ruht in anderen Menüs sowie ausgeblendeten Tabs. Fahrzeugbewegung, Arbeitsbreiten, Wendebereiche und Geräte sind vereinfacht. Die Darstellung des Lohnunternehmer-Mähdreschers verwendet momentan denselben Bewegungscontroller wie der Farmall; noch keine eigenständige Fuhrpark- oder Transportverwaltung. Die alten wirtschaftlichen Werte wurden nicht als realistische Farmall-Leistungsdaten neu kalibriert. Keine vollständige Nachbildung der FS25-Agronomie oder des Helfersystems.

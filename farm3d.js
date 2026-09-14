@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/three/addons/controls/OrbitControls.js';
 import { catalog, loadModel } from './model-loader.js';
-const W=window.FarmWorld;
+const W=window.FarmWorld,E=window.Farm;
 let renderer=null;
+let workSpeed=1;
 let rememberedCamera=null;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const scratch=new THREE.Object3D();
@@ -13,6 +14,8 @@ export function mount(host,state,selected,onField,options={}){
   const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let statusMessage='Farmall wird geladen …',shownStatus='',mode='select';
   let wheelFront=[],wheelRear=[],steering=[],steeringWheel=null;
+  let mission=null,lastWorkNotice=0,implement=null,combine=null;
+  const fieldVisuals=new Map(),workOverlays=new Map();
   const scene=new THREE.Scene(),geometry=new Set(),materials=new Set(),textures=new Set(),events=[];
   const isWinter=window.Farm.season(state)==='Winter',season=window.Farm.season(state);
   scene.background=new THREE.Color(isWinter?0xd6e0de:0xc7d7ca);
@@ -56,8 +59,8 @@ export function mount(host,state,selected,onField,options={}){
     const g=geo(new THREE.BufferGeometry());g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));const m=new THREE.LineBasicMaterial({color:p.id===selected?0xffedaa:0x647148});materials.add(m);const line=new THREE.Line(g,m);scene.add(line);fieldBorders.push({line,id:p.id});
     const count=Math.floor(p.w/.65),h=crop==='growing'?.18+.5*Math.min(1,f.heat/window.Farm.CROPS[f.crop].heat):crop==='ready'?.72:.018;
     const rows=new THREE.InstancedMesh(geo(new THREE.BoxGeometry(.12,h,p.d-.7)),mat(isWinter?0xe1dfce:crop==='growing'?0x526e37:crop==='ready'?0xe0c471:crop==='prepared'?0x4f3d2c:0xb39b60),count);
-    for(let i=0;i<count;i++){scratch.position.set(p.x+.4+i*.65,.15+h/2,p.z+p.d/2);scratch.rotation.set(0,0,0);scratch.scale.set(1,1,1);scratch.updateMatrix();rows.setMatrixAt(i,scratch.matrix);}rows.receiveShadow=true;scene.add(rows);
-    label(f?'0'+f.id+'  '+f.name+' · '+f.ha+' ha':'04  Am Waldrand · zu kaufen',p.x+p.w/2,.6,p.z+p.d/2,f?'#fff8df':'#e8dba8',.91);
+    for(let i=0;i<count;i++){scratch.position.set(p.x+.4+i*.65,.15+h/2,p.z+p.d/2);scratch.rotation.set(0,0,0);scratch.scale.set(1,1,1);scratch.updateMatrix();rows.setMatrixAt(i,scratch.matrix);}rows.receiveShadow=true;scene.add(rows);fieldVisuals.set(p.id,{tile,rows,p,crop,h});
+    label(f?'0'+f.id+'  '+f.name+' · '+f.ha+' ha':'04  Am Waldrand · zu kaufen',p.x+p.w/2,.6,p.z-.7,f?'#fff8df':'#e8dba8',.91);
   }
   function building(x,z,w,d,h,isHouse=false){
     const group=new THREE.Group();scene.add(group);box(w,h,d,isHouse?walls:red,x,h/2,z,group);
@@ -90,13 +93,74 @@ export function mount(host,state,selected,onField,options={}){
     const count=220,positions=new Float32Array(count*3);for(let i=0;i<count;i++){positions[i*3]=Math.sin(i*12.989)*34;positions[i*3+1]=(i%19)*.65+1;positions[i*3+2]=Math.cos(i*7.24)*26;}
     const g=geo(new THREE.BufferGeometry());g.setAttribute('position',new THREE.BufferAttribute(positions,3));const m=new THREE.PointsMaterial({color:isWinter?0xffffff:0xd7e7e3,size:isWinter?.15:.075,transparent:true,opacity:.65});materials.add(m);const rain=new THREE.Points(g,m);scene.add(rain);particles.push(rain);
   }
+  // Simple, code-native implements; later GLBs can replace these without changing work logic.
+  function makeImplement(key){
+    if(implement){scene.remove(implement);implement=null;}
+    implement=new THREE.Group();scene.add(implement);
+    const blue=mat(0x487c9b),iron=mat(0x3e4840),seed=mat(0xd5bc75);
+    box(.10,.12,1.1,iron,0,.35,1.6,implement);
+    if(key==='cultivate'){
+      box(2.4,.13,.85,blue,0,.35,2.1,implement);
+      for(let i=0;i<7;i++){box(.09,.33,.09,iron,-1.02+i*.34,.17,2.35,implement);box(.20,.06,.36,iron,-1.02+i*.34,.035,2.4,implement);}
+    }else if(key==='fertilize'){
+      mesh(new THREE.CylinderGeometry(.65,.27,.72,8),seed,0,.72,1.6,implement);box(1.45,.09,.6,blue,0,.30,1.6,implement);
+    }else if(key!=='harvest'){
+      box(2.3,.55,.63,seed,0,.70,2.0,implement);box(2.45,.12,1.1,blue,0,.38,2,implement);
+      for(let i=0;i<9;i++)box(.07,.25,.07,iron,-1.05+i*.26,.15,2.45,implement);
+      for(const x of [-1.13,1.13]){const tire=mesh(new THREE.CylinderGeometry(.28,.28,.16,12),iron,x,.28,2,implement);tire.rotation.z=Math.PI/2;}
+    }
+    implement.visible=key!=='harvest';
+  }
+  function makeCombine(){
+    if(combine)return;
+    combine=new THREE.Group();scene.add(combine);const green=mat(0x7d9845),dark=mat(0x343e36),cream=mat(0xe4d7ac);
+    box(1.9,1.5,3.2,green,0,1.45,0,combine);box(1.1,1.0,.95,glass,.25,2.3,-.8,combine);box(1.3,.15,1.1,cream,.25,2.87,-.8,combine);
+    box(3.0,.35,.9,cream,0,.35,-2.0,combine);for(let i=0;i<12;i++)box(.06,.17,.65,dark,-1.38+i*.25,.24,-2.5,combine);
+    for(const x of [-1,1])for(const z of [-.8,1]){const tire=mesh(new THREE.CylinderGeometry(z<0?.55:.38,z<0?.55:.38,.3,14),dark,x,z<0?.55:.38,z,combine);tire.rotation.z=Math.PI/2;}
+    combine.visible=false;
+  }
+  function syncWorkVisual(j){
+    if(!j)return;const v=fieldVisuals.get(j.field),plan=W.fieldPlan(j.field,j.key);if(!v||!plan)return;
+    let strips=workOverlays.get(j.id);
+    if(!strips){const color=j.key==='cultivate'?0x68442c:j.key==='fertilize'?0x76a94a:j.key==='harvest'?0xb4995d:0x596546;const m=mat(color,{transparent:j.key==='fertilize',opacity:j.key==='fertilize'?.35:1});strips=plan.segments.filter(a=>a.work).map(a=>{const o=box(plan.spacing-.02,.016,1,m,a.a.x,j.key==='fertilize'?.93:.20,0);o.userData.segment=a;return o;});workOverlays.set(j.id,strips);}
+    const done=(1-j.remaining/j.total)*plan.total;
+    for(const strip of strips){const seg=strip.userData.segment,t=clamp((done-seg.start)/seg.length,0,1),length=v.p.d*t;strip.visible=t>0;strip.scale.z=Math.max(.001,length);strip.position.z=seg.lane%2?v.p.z+v.p.d-length/2:v.p.z+length/2;}
+    if(j.key==='harvest'){
+      const m=new THREE.Matrix4();
+      for(let i=0;i<v.rows.count;i++){
+        const x=v.p.x+.4+i*.65,lane=Math.min(strips.length-1,Math.floor((x-v.p.x)/plan.spacing)),seg=strips[lane].userData.segment,t=clamp((done-seg.start)/seg.length,0,1),d=(v.p.d-.7)*(1-t);
+        scratch.position.set(x,.15+v.h/2,lane%2?v.p.z+.35+d/2:v.p.z+v.p.d-.35-d/2);scratch.rotation.set(0,0,0);scratch.scale.set(1,1,Math.max(.001,1-t));scratch.updateMatrix();v.rows.setMatrixAt(i,scratch.matrix);
+      }v.rows.instanceMatrix.needsUpdate=true;
+    }
+  }
+  for(const job of state.jobs)syncWorkVisual(job);
+  function activeJob(){return state.jobs.find(j=>j.live&&!j.paused);}
+  function notifyWork(completed=false){savePose();options.onWork?.({completed});}
+  function beginMission(j){
+    if(!vehicle||!j||j.paused)return;
+    const plan=W.fieldPlan(j.field,j.key),remaining=W.remainingPlan(plan,1-j.remaining/j.total);
+    const approach=W.route({x:vehicle.position.x,z:vehicle.position.z},remaining.entry,definition.driving.collisionRadius);
+    if(!approach.length){E.pauseJob(state,j.id);setStatus('Feld nicht erreichbar. Arbeit wurde unterbrochen.');notifyWork();return;}
+    mission={id:j.id,plan,credit:j.total-j.remaining,key:j.key};
+    path=[...approach.map(p=>({...p,work:false})),...remaining.points];driving=true;paused=false;mode='select';
+    const pauseButton=host.querySelector('[data-map=pause]');pauseButton.textContent='Pause';pauseButton.setAttribute('aria-pressed','false');
+    marker.visible=false;makeImplement(j.key);if(combine)combine.visible=false;if(j.key==='harvest'){makeCombine();combine.visible=true;vehicle.visible=false;}else vehicle.visible=true;
+    updateRoute();updateButtons();setStatus('Anfahrt · '+state.fields.find(f=>f.id===j.field).name);
+  }
+  function creditWork(distance){
+    const j=state.jobs.find(j=>j.id===mission?.id);if(!j)return;
+    mission.credit=Math.min(j.total,mission.credit+distance/mission.plan.total*j.total);
+    const target=Math.floor((mission.credit+1e-7)*100)/100,delta=target-(j.total-j.remaining);
+    if(delta>1e-7){const r=E.work(state,j.id,delta);syncWorkVisual(j);if(r.completed){mission=null;stop('Feldarbeit abgeschlossen',false);implement&&(implement.visible=false);combine&&(combine.visible=false);vehicle.visible=true;notifyWork(true);}}
+  }
   function setStatus(message){statusMessage=message;paintStatus();}
   function paintStatus(){const text=paused?'Fahrt pausiert':statusMessage;if(text!==shownStatus){status.textContent=text;shownStatus=text;}const speedLabel=host.querySelector('[data-speed]');if(speedLabel)speedLabel.textContent=(speed*3.6).toLocaleString('de-DE',{maximumFractionDigits:1})+' km/h';}
   function savePose(){if(vehicle&&saveDue){options.onPose?.({x:vehicle.position.x,z:vehicle.position.z,yaw});saveDue=false;}}
   function updateRoute(){if(routeLine){scene.remove(routeLine);routeLine.geometry.dispose();geometry.delete(routeLine.geometry);routeLine=null;}if(vehicle&&path.length){const g=geo(new THREE.BufferGeometry().setFromPoints([vehicle.position.clone().setY(.22),...path.map(p=>new THREE.Vector3(p.x,.22,p.z))]));routeLine=new THREE.Line(g,routeMaterial);routeLine.computeLineDistances();routeLine.renderOrder=2;scene.add(routeLine);}}
-  function stop(message='Farmall steht bereit'){path=[];destination=null;driving=false;speed=0;marker.visible=false;updateRoute();savePose();setStatus(message);updateButtons();}
+  function stop(message='Farmall steht bereit',pauseWork=true){if(mission&&pauseWork){E.pauseJob(state,mission.id);notifyWork();}mission=null;path=[];destination=null;driving=false;speed=0;marker.visible=false;updateRoute();savePose();setStatus(message);updateButtons();}
   function driveTo(point){
     if(!vehicle)return;
+    if(activeJob()){setStatus('Feldarbeit zuerst mit Stopp unterbrechen.');return;}
     if(state.tractor.condition<20){setStatus('Traktor zuerst in der Werkstatt warten.');options.onMessage?.(statusMessage);return;}
     const next=W.route({x:vehicle.position.x,z:vehicle.position.z},point,definition.driving.collisionRadius);
     if(!next.length){setStatus('Ziel nicht erreichbar – bitte eine freie Fläche wählen.');return;}
@@ -106,11 +170,12 @@ export function mount(host,state,selected,onField,options={}){
   function updateButtons(){host.querySelectorAll('[data-mode]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.mode===mode));b.classList.toggle('active',b.dataset.mode===mode);});host.querySelector('[data-map="stop"]').disabled=!driving;host.querySelector('[data-mode="drive"]').disabled=!ready;host.querySelector('[data-map="tractor"]').disabled=!ready;}
   function action(event){const b=event.target.closest('button');if(!b||b.disabled)return;
     if(b.dataset.mode){mode=b.dataset.mode;setStatus(mode==='drive'?'Freie Fläche antippen → Farmall fährt dorthin':'Feld antippen → verwalten');updateButtons();}
-    const a=b.dataset.map;if(a==='stop')stop();
+    const a=b.dataset.map;if(a==='stop')stop('Feldarbeit / Fahrt unterbrochen');
+    if(a==='rate'){workSpeed=workSpeed===1?4:workSpeed===4?12:1;b.textContent=workSpeed+'×';b.setAttribute('aria-label','Arbeitstempo '+workSpeed+'-fach');}
     if(a==='home'){const aspect=canvas.clientWidth/Math.max(1,canvas.clientHeight);focus(new THREE.Vector3(0,1,0),52/Math.max(95,62*aspect)*.94);}
     if(a==='tractor'&&vehicle)focus(vehicle.position.clone().setY(.75),6.5);
     if(a==='zoom-in'||a==='zoom-out'){camera.zoom=clamp(camera.zoom*(a==='zoom-in'?1.35:1/1.35),controls.minZoom,controls.maxZoom);camera.updateProjectionMatrix();controls.update();}
-    if(a==='pause'){paused=!paused;speed=0;b.textContent=paused?'Weiter':'Pause';b.setAttribute('aria-pressed',String(paused));paintStatus();}
+    if(a==='pause'){paused=!paused;speed=0;if(mission){const j=state.jobs.find(j=>j.id===mission.id);if(j){if(paused)E.pauseJob(state,j.id);else{const why=E.resumeJob(state,j.id);if(why){paused=true;setStatus(why);}}notifyWork();}}b.textContent=paused?'Weiter':'Pause';b.setAttribute('aria-pressed',String(paused));paintStatus();}
   }
   listen(host,'click',action);
   let down=null,pointers=new Set(),gesture=false;
@@ -120,6 +185,8 @@ export function mount(host,state,selected,onField,options={}){
   listen(canvas,'pointerup',e=>{
     const tap=down&&down.id===e.pointerId&&!gesture&&performance.now()-down.time<650;pointers.delete(e.pointerId);if(pointers.size===0)down=null;if(!tap)return;
     const rect=canvas.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((e.clientX-rect.left)/rect.width*2-1,1-(e.clientY-rect.top)/rect.height*2),camera);
+    const fieldHit=ray.intersectObjects(fieldTargets,false)[0];
+    if(fieldHit){const id=fieldHit.object.userData.fieldId;if(mode==='drive'&&!activeJob()){const plan=W.fieldPlan(id);driveTo(plan.segments[0].a);}onField(id);return;}
     if(mode==='drive'){if(ray.ray.intersectPlane(groundPlane,hit))driveTo({x:hit.x,z:hit.z});return;}
     if(vehicle&&ray.intersectObject(vehicle,true).length){mode='drive';selectedRing.visible=true;setStatus('Farmall ausgewählt · Ziel auf freier Fläche antippen');updateButtons();return;}
     const picked=ray.intersectObjects(fieldTargets,false)[0];if(picked){const id=picked.object.userData.fieldId;onField(id);}
@@ -136,30 +203,33 @@ export function mount(host,state,selected,onField,options={}){
   listen(canvas,'webglcontextrestored',()=>{contextLost=false;setStatus('Grafik wiederhergestellt');requestFrame();});
   function step(dt){
     if(!vehicle)return;
+    if(mission){const j=state.jobs.find(j=>j.id===mission.id);if(!j){mission=null;stop();return;}const why=j.paused?'Arbeit unterbrochen':E.workReason(state,j);if(why){speed=0;setStatus(why);return;}}
     if(driving&&path.length){
       const p=path[0],dx=p.x-vehicle.position.x,dz=p.z-vehicle.position.z,distance=Math.hypot(dx,dz);
-      if(distance<.20){path.shift();if(!path.length){stop('Ziel erreicht · Farmall steht bereit');return;}}
+      if(distance<.06){vehicle.position.set(p.x,0,p.z);if(mission&&p.work)creditWork(distance);if(disposed||!driving)return;path.shift();if(!path.length){if(mission){const j=state.jobs.find(j=>j.id===mission.id);if(j)creditWork(mission.plan.total);if(!mission)return;}stop('Ziel erreicht · Tätigkeit direkt am Feld wählen');return;}}
       else{
         const desired=Math.atan2(-dx,-dz),delta=Math.atan2(Math.sin(desired-yaw),Math.cos(desired-yaw));
         yaw+=clamp(delta,-1.7*dt,1.7*dt);vehicle.rotation.y=yaw;
-        const targetSpeed=definition.driving.speedMps*Math.max(0,Math.cos(delta));speed=THREE.MathUtils.damp(speed,targetSpeed,3,dt);
+        const targetSpeed=(mission?2.0:definition.driving.speedMps)*Math.max(0,Math.cos(delta));speed=THREE.MathUtils.damp(speed,targetSpeed,3,dt);
         const distanceStep=Math.min(distance,speed*dt);
         // Follow the collision-checked path; rotation is a visual, simplified steering model.
         const next={x:vehicle.position.x+dx/distance*distanceStep,z:vehicle.position.z+dz/distance*distanceStep};
         if(!W.clearLine({x:vehicle.position.x,z:vehicle.position.z},next,definition.driving.collisionRadius)){stop('Fahrweg blockiert. Wähle ein neues Ziel.');return;}
         vehicle.position.set(next.x,0,next.z);saveDue=true;
+        if(mission){const job=state.jobs.find(j=>j.id===mission.id),field=state.fields.find(f=>f.id===job?.field);setStatus((p.work?E.ACTIONS[job.key].name+' · '+Math.floor((1-job.remaining/job.total)*100)+' %':'Anfahrt / Wenden')+' · '+(field?.name||''));if(p.work)creditWork(distanceStep);}
         for(const o of wheelFront)o.rotateX(-distanceStep/definition.driving.frontWheelRadius);
         for(const o of wheelRear)o.rotateX(-distanceStep/definition.driving.rearWheelRadius);
         const turn=clamp(delta,-.44,.44);for(const o of steering)o.rotation.y=turn;
         if(steeringWheel)steeringWheel.quaternion.setFromAxisAngle(new THREE.Vector3(0,.772,.635),turn*5);
       }
     }else{speed=0;for(const o of steering)o.rotation.y=THREE.MathUtils.damp(o.rotation.y,0,8,dt);}
+    if(implement){implement.position.copy(vehicle.position);implement.position.y=mission&&path[0]?.work?0:.22;implement.rotation.y=yaw;}if(combine?.visible){combine.position.copy(vehicle.position);combine.rotation.y=yaw;}
     selectedRing.position.set(vehicle.position.x,.21,vehicle.position.z);selectedRing.visible=mode==='drive';
     for(const rain of particles){const a=rain.geometry.attributes.position;for(let i=0;i<a.count;i++){let y=a.getY(i)-dt*(isWinter?.8:8);if(y<.4)y=13;a.setY(i,y);}a.needsUpdate=true;}
   }
   function requestFrame(){if(!raf&&!disposed&&!document.hidden&&visible&&!contextLost)raf=requestAnimationFrame(frame);}
-  function frame(now){raf=0;if(disposed||document.hidden||!visible||contextLost)return;const dt=previous?Math.min((now-previous)/1000,.06):0;previous=now;if(!paused)step(dt);if(now-lastPaint>1000/30){renderer.render(scene,camera);paintStatus();lastPaint=now;}requestFrame();}
-  updateButtons();requestFrame();
+  function frame(now){raf=0;if(disposed||document.hidden||!visible||contextLost)return;const dt=previous?Math.min((now-previous)/1000,.06):0;previous=now;if(!paused)step(dt*workSpeed);if(mission&&now-lastWorkNotice>1000){notifyWork();lastWorkNotice=now;}if(now-lastPaint>1000/30){renderer.render(scene,camera);paintStatus();lastPaint=now;}requestFrame();}
+  host.querySelector('[data-map=rate]').textContent=workSpeed+'×';updateButtons();requestFrame();
   catalog().then(async c=>{
     const results=await Promise.allSettled(c.instances.map(async instance=>{const def=c.models.find(m=>m.id===instance.model);const loaded=await loadModel(def);return {instance,def,...loaded};}));
     if(disposed)return;
@@ -170,12 +240,17 @@ export function mount(host,state,selected,onField,options={}){
         const find=list=>(list||[]).map(n=>object.getObjectByName(n)).filter(Boolean);wheelFront=find(def.parts.frontWheels);wheelRear=find(def.parts.rearWheels);steering=find(def.parts.steering);steeringWheel=object.getObjectByName(def.parts.steeringWheel);ready=true;
       }
     }
-    host.dataset.ready=String(ready);if(ready){setStatus(failures?'Farmall bereit · Ein weiteres Modell konnte nicht geladen werden.':'Farmall bereit · Auswählen oder Fahrmodus starten');}else setStatus('Farmall konnte nicht geladen werden. Bitte Seite neu laden.');updateButtons();
+    host.dataset.ready=String(ready);if(ready){setStatus(failures?'Farmall bereit · Ein weiteres Modell konnte nicht geladen werden.':'Farmall bereit · Auswählen oder Fahrmodus starten');}else setStatus('Farmall konnte nicht geladen werden. Bitte Seite neu laden.');updateButtons();if(activeJob())beginMission(activeJob());
   }).catch(()=>{if(!disposed)setStatus('Modelle konnten nicht geladen werden. Bitte Seite neu laden.');});
   const api=()=>{
     disposed=true;cancelAnimationFrame(raf);savePose();rememberedCamera={position:camera.position.toArray(),target:controls.target.toArray(),zoom:camera.zoom};observer.disconnect();intersection.disconnect();controls.dispose();events.forEach(fn=>fn());geometry.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());sun.shadow.map?.dispose();renderer.renderLists.dispose();canvas.remove();
   };
   api.save=savePose;
+  api.startWork=()=>{const j=activeJob();if(j){beginMission(j);api.focusField(j.field);}};
+  api.resumeWork=api.startWork;
+  api.refreshWork=()=>{if(mission&&!activeJob())stop('Arbeit unterbrochen',false);};
+  api.sendToField=id=>{const plan=W.fieldPlan(id);if(plan)driveTo(plan.segments[0].a);};
+  api.focusField=id=>{const p=W.PLOTS.find(p=>p.id===id);if(p){const aspect=canvas.clientWidth/Math.max(1,canvas.clientHeight);focus(new THREE.Vector3(p.x+p.w/2,.3,p.z+p.d/2),52/Math.max(34,26*aspect));}};
   api.select=id=>{fieldBorders.forEach(f=>f.line.material.color.set(f.id===id?0xffedaa:0x647148));};
   api.resetCamera=()=>{rememberedCamera=null;};
   return api;

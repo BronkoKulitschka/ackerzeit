@@ -2,6 +2,14 @@
 (function(root){
   'use strict';
   const BOUNDS={minX:-35,maxX:35,minZ:-27,maxZ:27};
+  // Shared assignment profiles: UI and lane planning use the same working widths.
+  const EQUIPMENT={
+    cultivate:{vehicle:'Farmall D-320',tool:'Grubber',width:2.5},
+    barley:{vehicle:'Farmall D-320',tool:'Sämaschine',width:2.5},
+    wheat:{vehicle:'Farmall D-320',tool:'Sämaschine',width:2.5},
+    fertilize:{vehicle:'Farmall D-320',tool:'Düngerstreuer',width:4},
+    harvest:{vehicle:'Lohnunternehmer',tool:'Mähdrescher',width:3}
+  };
   // The view is a schematic farm: field labels carry the simulation's actual hectares.
   const PLOTS=[
     {id:1,x:4,z:-21,w:25,d:17},
@@ -47,6 +55,26 @@
     }
     return [];
   }
+  function fieldPlan(id,key='cultivate'){
+    const p=PLOTS.find(p=>p.id===id);if(!p)return null;
+    const width=(EQUIPMENT[key]||EQUIPMENT.cultivate).width;
+    const count=Math.ceil(p.w/width),spacing=p.w/count,margin=1.7,segments=[];
+    let previous=null,total=0;
+    for(let lane=0;lane<count;lane++){
+      const x=p.x+spacing*(lane+.5),a={x,z:p.z+(lane%2?p.d-margin:margin)},b={x,z:p.z+(lane%2?margin:p.d-margin)};
+      if(previous)segments.push({a:previous,b:a,work:false,lane,length:Math.hypot(a.x-previous.x,a.z-previous.z)});
+      const length=Math.abs(b.z-a.z);segments.push({a,b,work:true,lane,length,start:total});total+=length;previous=b;
+    }
+    return {plot:p,spacing,segments,total};
+  }
+  function remainingPlan(plan,fraction){
+    const done=Math.max(0,Math.min(1,fraction))*plan.total;
+    const index=plan.segments.findIndex(s=>s.work&&s.start+s.length>done+1e-8);
+    if(index<0)return {entry:plan.segments.at(-1).b,points:[]};
+    const first=plan.segments[index],t=(done-first.start)/first.length;
+    const entry={x:first.a.x+(first.b.x-first.a.x)*t,z:first.a.z+(first.b.z-first.a.z)*t};
+    return {entry,points:plan.segments.slice(index).map(s=>({...s.b,work:s.work,lane:s.lane}))};
+  }
   function safePose(value){return value&&Number.isFinite(value.yaw)&&!blocked(value)?{x:value.x,z:value.z,yaw:Math.atan2(Math.sin(value.yaw),Math.cos(value.yaw))}:{...spawn};}
   function validateCatalog(c){
     if(!c||c.version!==1||!Array.isArray(c.models)||!c.models.length||!Array.isArray(c.instances))throw Error('Ungültiger Modellkatalog.');
@@ -55,6 +83,6 @@
     const instances=new Set();for(const i of c.instances){if(typeof i.id!=='string'||instances.has(i.id)||!ids.has(i.model)||!Array.isArray(i.position)||i.position.length!==3||!i.position.every(Number.isFinite)||!Number.isFinite(i.rotationY))throw Error('Ungültige Modellplatzierung.');instances.add(i.id);}
     return c;
   }
-  const api={BOUNDS,PLOTS,OBSTACLES,spawn,blocked,clearLine,route,safePose,validateCatalog};
+  const api={EQUIPMENT,fieldPlan,remainingPlan,BOUNDS,PLOTS,OBSTACLES,spawn,blocked,clearLine,route,safePose,validateCatalog};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.FarmWorld=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

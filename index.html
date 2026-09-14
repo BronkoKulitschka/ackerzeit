@@ -4,16 +4,16 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#213e32"><meta name="description" content="Ackerzeit – ein saisonales Farm-Managementspiel mit isometrischer 3D-Hofansicht.">
   <title>Ackerzeit · Farm Manager</title>
-  <link rel="stylesheet" href="style.css?v=0.2.0">
+  <link rel="stylesheet" href="style.css?v=0.3.0">
   <script type="importmap">{"imports":{"three":"./vendor/three/three.module.js"}}</script>
-  <script defer src="engine.js?v=0.2.0"></script><script defer src="world.js?v=0.2.0"></script><script defer src="app.js?v=0.2.0"></script>
+  <script defer src="engine.js?v=0.3.0"></script><script defer src="world.js?v=0.3.0"></script><script defer src="app.js?v=0.3.0"></script>
 </head>
 <body>
   <aside class="sidebar">
     <a class="brand" href="#hof"><span class="brand-mark" aria-hidden="true">▥</span><span>ACKERZEIT<small>DEIN HOF. DEIN JAHR.</small></span></a>
     <div class="farm-label">BETRIEB 001<strong>Sonnenrain</strong><span>Kleiner Ackerbaubetrieb</span></div>
     <nav aria-label="Hauptmenü" id="nav"></nav>
-    <div class="sidebar-bottom"><span>FARM MANAGER</span><strong>Version 0.2.0</strong><button class="quiet" data-view="hilfe">Spielhilfe & Spielstand</button></div>
+    <div class="sidebar-bottom"><span>FARM MANAGER</span><strong>Version 0.3.0</strong><button class="quiet" data-view="hilfe">Spielhilfe & Spielstand</button></div>
   </aside>
   <div class="workspace">
     <header class="topbar"><div><span class="eyebrow" id="season-label"></span><h1 id="date-label"></h1></div><div class="time-controls"><button id="week" class="secondary">Bis zu 7 Tage</button><button id="next" class="primary">Nächster Tag <span aria-hidden="true">▸</span></button></div></header>
@@ -21,7 +21,7 @@
     <div id="save-warning" class="warning" role="alert" hidden></div>
     <div class="stats" id="stats"></div>
     <main id="main"></main>
-    <footer><span>ACKERZEIT <b>0.2.0</b></span><span id="save-status">Spielstand wird lokal gespeichert</span></footer>
+    <footer><span>ACKERZEIT <b>0.3.0</b></span><span id="save-status">Spielstand wird lokal gespeichert</span></footer>
   </div>
   <div id="toast" role="status" aria-live="polite" hidden></div>
   <dialog id="confirm-dialog"><form method="dialog"><h2 id="confirm-title"></h2><p id="confirm-text"></p><div class="dialog-actions"><button value="cancel">Abbrechen</button><button id="confirm-ok" value="ok" class="primary">Bestätigen</button></div></form></dialog>

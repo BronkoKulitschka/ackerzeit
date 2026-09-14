@@ -2,7 +2,7 @@
 import argparse, hashlib, json, pathlib, zipfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser()
-p.add_argument('--version', default='0.2.0')
+p.add_argument('--version', default='0.3.0')
 p.add_argument('--output', type=pathlib.Path)
 a = p.parse_args()
 files = sorted(f for f in ROOT.rglob('*') if f.is_file() and not any(x in {'.git','node_modules','__pycache__'} for x in f.relative_to(ROOT).parts) and f.suffix not in {'.zip','.pyc'} and f.name != 'release-manifest.json')

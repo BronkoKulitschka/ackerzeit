@@ -43,13 +43,13 @@ Neue Gebäude müssen zusätzlich in `world.js` unter `OBSTACLES` für die Wegfi
 - `parts`: Namen der sichtbaren Rad- und Lenkknoten.
 - `sockets`: Vorbereitete Anschlusspunkte für Fahrer, Anhänger und Geräte.
 
-`speedMps` begrenzt die freie Fahrt auf dem Hof. Das Feld `specs.maxSpeedKmh` ist eine technische Modellangabe; es stellt nicht automatisch die Fahrgeschwindigkeit der Hofansicht ein. Wirtschaftliche Leistung, Verbrauch und Geräteeignung sind noch nicht aus diesem Katalog abgeleitet. Die bestehende Tagesplanung arbeitet weiter mit den Werten in `engine.js`.
+`speedMps` begrenzt die freie Fahrt auf dem Hof. Das Feld `specs.maxSpeedKmh` ist eine technische Modellangabe; es stellt nicht automatisch die Fahrgeschwindigkeit der Hofansicht ein. Wirtschaftliche Leistung, Verbrauch und Geräteeignung sind noch nicht aus diesem Katalog abgeleitet. Die direkte Feldarbeit verwendet die wirtschaftlichen Werte in `engine.js`. Die automatisch zugeteilten Geräte und Arbeitsbreiten stehen in `world.js` unter `EQUIPMENT`; daraus werden auch die Arbeitsbahnen abgeleitet.
 
 ## Empfohlene Reihenfolge
 
 1. Kleiner einachsiger Anhänger, Ankuppeln und Abstellen.
 2. Beladen und Entladen an Lagerpunkten.
-3. Kleines Bodenbearbeitungsgerät und eine sichtbare Feldarbeitsfahrt.
+3. Die vorhandenen einfachen Gerätegeometrien durch detailliertere GLB-Anbaugeräte ersetzen.
 4. Weitere Traktoren samt Fahrzeugauswahl und individuellen Zuständen.
 5. Gebäude, Lagererweiterungen und Dekoration.
 
@@ -68,7 +68,7 @@ Der Farmall ist das eigens für dieses Projekt erstellte Modell. Es nutzt keine 
 Das mitgelieferte Werkzeug übernimmt das Erstellen des Manifests und des ZIPs:
 
 ```bash
-python tools/build-release.py --version 0.2.0
+python tools/build-release.py --version 0.3.0
 ```
 
 Die ZIP liegt danach neben dem Projektordner. Das Werkzeug sammelt die Projektdateien, ausgenommen `.git`, `node_modules`, Python-Caches und ZIPs. Daher Testausgaben und private lokale Dateien außerhalb des Projekts ablegen. Bei einer neuen Versionsnummer auch die sichtbare Versionsangabe und Versionsparameter in `index.html` / `app.js` aktualisieren.

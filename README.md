@@ -1,111 +1,98 @@
-# Ackerzeit · Farm Manager 0.2.0
+# Ackerzeit · Farm Manager 0.3.0
 
-Ein deutschsprachiges Browser-Farmspiel mit isometrischer 3D-Hofansicht und saisonaler Hofverwaltung. Weiterentwicklung des vorhandenen Ackerzeit 0.1.1, keine separate Demo. HTML, CSS und JavaScript; alle 3D-Abhängigkeiten und das Farmall-Modell liegen im Paket. Zum Spielen wird kein npm-Build und kein CDN benötigt.
+Deutschsprachiges Browser-Farmspiel mit 3D-Hof und saisonaler Hofverwaltung. Dieses Update baut das vorhandene Ackerzeit weiter um: Die separate Arbeitsplanung entfällt. Feldarbeit wird direkt auf der Karte beauftragt und sichtbar ausgeführt.
 
-## Neu: der Farmall auf deinem Hof
+## Feldarbeit als Management
 
-- Echte 3D-Ansicht mit dem McCormick Farmall D-320, Hofgebäuden, Feldern und jahreszeitlichen Farben.
-- Ziele anklicken oder antippen; der Traktor fährt auf kollisionsgeprüften Wegen um die Hofgebäude. Räder und Lenkung bewegen sich passend dazu.
-- Kamera verschieben und zoomen, Nahansicht des Traktors, Hofübersicht, Pause und Stopp.
-- Auf dem Smartphone feste untere Navigation und eine in den Bildschirm passende Hofansicht. Lange Verwaltungsansichten und Felddetails scrollen innerhalb ihres Bereichs; die Seite selbst scrollt nicht.
-- Gemeinsamer GLB-Modellkatalog für zusätzliche Modelle. Siehe `MODELLKATALOG.md`.
-- Optionale Fahrzeugposition im vorhandenen Spielstand. Spielstände aus 0.1.0 und 0.1.1 bleiben lesbar.
+1. **Feld antippen.** Zustand, Bodenfeuchte und nächster Arbeitsschritt erscheinen direkt am Schlag.
+2. **Farmall hinschicken.** Der Traktor fährt zum Feld. Eine Tätigkeit lässt sich auch sofort am Feld auswählen; dann beginnt die Anfahrt automatisch.
+3. **Tätigkeit wählen.** Boden bearbeiten, Sommergerste oder Winterweizen säen, düngen oder den Lohnunternehmer zur Ernte bestellen. Bei jeder Tätigkeit stehen Maschine, Gerät, Arbeitsbreite und Kosten beziehungsweise der Grund, warum sie noch nicht möglich ist.
+4. **Fahrer arbeitet automatisch.** Die Maschine fährt Bahnen, wendet und verändert das Feld sichtbar. Anbaugeräte werden auf Arbeitsbahnen abgesenkt und bei Anfahrt beziehungsweise Wenden angehoben. Der Fortschritt folgt der tatsächlich gefahrenen Arbeitsstrecke.
+5. **Eingreifen.** Am Feld unterbrechen, fortsetzen oder abbrechen. Mit 1× / 4× / 12× beschleunigst du die Darstellung. Nach Abschluss wird der nächste Arbeitsschritt freigegeben.
 
-Die **freie Fahrt** dient in diesem Schritt der Bewegung auf dem Hof. Sie verbraucht keinen Diesel, bearbeitet keine Felder und lässt die Spielzeit nicht verstreichen. Feldaufträge, Dieselreservierung, Wachstum, Wetter, Einnahmen und Ausgaben laufen weiter über den Tageswechsel. Die vorhandene wirtschaftliche Spielbalance wurde nicht neu kalibriert. Der Farmall ersetzt die bisherige grafische Darstellung des Standardtraktors.
+Derzeit gibt es einen eigenen Farmall und automatisch zugeteilte Geräte. Die Ernte übernimmt ein einfacher sichtbarer Mähdrescher des Lohnunternehmers. Es läuft eine Feldarbeit gleichzeitig. Fahrzeugauswahl aus einem größeren Fuhrpark und mehrere Fahrer sind noch kein Bestandteil dieses Updates.
 
-## Update in deinem Termux-Workflow
+Die gestalterische Orientierung ist das Helferprinzip von **Farming Simulator 25**. GIANTS beschreibt Arbeitsbreiten nach Gerät, Arbeitsbahnen innerhalb der Feldgrenzen und Einstellungen für das Vorgewende: [Offizielle Vorstellung der FS25-Helfer](https://www.farming-simulator.com/newsArticle.php?news_id=573). Ackerzeit übernimmt daraus die Idee der automatischen Ausführung und übersetzt sie in Feldentscheidungen für ein Managementspiel. Die jetzigen rechteckigen Arbeitsbahnen haben einen vereinfachten Wendebereich; einstellbare Vorgewende, frei wählbare Bahnrichtungen und vollständige FS25-Feldmechaniken sind noch nicht umgesetzt. Es werden eigene Modelle und eigener Code verwendet.
 
-Lade **ackerzeit-v0.2.0.zip** in den Android-Downloadordner. Dein vorhandenes Ackerzeit-Update-Skript aus 0.1.1 kann dieses Paket verarbeiten:
+## Zeit, Verbrauch und Spielstand
+
+- **8 Arbeitsstunden pro Tag:** Tatsächlicher Arbeitsfortschritt belastet Tagesbudget, Betriebsstunden und Traktorverschleiß. Am Limit wartet die Arbeit auf den nächsten Tag.
+- **Tageswechsel:** Pflanzen wachsen, Bodenfeuchte und Wetter ändern sich. Der Knopf erledigt keine direkten Feldarbeiten mehr im Hintergrund.
+- **Betriebsmittel:** Bei Arbeitsbeginn werden Kosten, Diesel, Saatgut und Dünger einmal reserviert. Beim Abbrechen wird nur der ungenutzte Anteil zurückgegeben. Unterbrechen erhält die gesamte verbleibende Arbeit.
+- **Wetter und Zustand:** Frost, zu nasser Boden, ungeeignetes Erntewetter und ein verschlissener Traktor verhindern die entsprechende Arbeit. Hinweise erscheinen am Feld.
+- **Speichern:** Arbeitsfortschritt wird während der Arbeit regelmäßig und bei Aktionen gespeichert. Nach Neuladen wird eine laufende Arbeit fortgesetzt; eine unterbrochene bleibt unterbrochen. Alte geplante Aufträge werden als unterbrochene Arbeiten übernommen, ohne Betriebsmittel erneut zu berechnen.
+- **Aktive Hofansicht:** Die Ausführung läuft in der sichtbaren Hofansicht. Andere Menüs, ein ausgeblendeter Tab oder ein geschlossenes Spiel halten sie an; bei Rückkehr wird fortgesetzt. Es gibt keinen Offline-Fortschritt.
+
+Freie Fahrt ist weiterhin eine vereinfachte Hofbewegung ohne Diesel- oder Zeitverbrauch. Arbeitsstunden und Kosten stammen aus der vorhandenen Spielbalance; sie sind keine realistischen Leistungsdaten des Farmall D-320. Kartenflächen sind schematisch und nicht maßstabsgetreu zu ihren Hektarangaben.
+
+## Update mit Termux
+
+Lade **ackerzeit-v0.3.0.zip** in den Android-Downloadordner und führe dein vorhandenes Update-Skript aus:
 
 ```bash
-bash ~/update.sh ~/storage/downloads/ackerzeit-v0.2.0.zip BronkoKulitschka/ackerzeit
+bash ~/update.sh ~/storage/downloads/ackerzeit-v0.3.0.zip BronkoKulitschka/ackerzeit
 ```
 
-Danach den bisherigen Ackerzeit-Spiellink öffnen und neu laden. GitHub Pages braucht gegebenenfalls etwas Zeit, bis der neue Commit veröffentlicht wurde. Falls du einen alten Stand siehst, die Seite vollständig neu laden.
+Danach den bisherigen Ackerzeit-Spiellink vollständig neu laden. GitHub Pages benötigt gegebenenfalls etwas Zeit für die Veröffentlichung. Das Paket muss nicht von Hand entpackt werden. Das Skript prüft es, übernimmt die Dateien und erstellt und pusht einen normalen Commit. Kein Force-Push. `update.sh` ist gegenüber dem vorliegenden 0.1.1-Repository unverändert.
 
-Entpacken von Hand ist nicht notwendig. Das Skript prüft das Paket, übernimmt die Dateien, erstellt einen normalen Commit und pusht in dein Repository. Es führt keinen Force-Push aus. Der Spielstand liegt im Browser auf derselben Adresse; das Update löscht ihn nicht. Ein Export unter **Hilfe → Spielstand exportieren** ist vor Updates sinnvoll.
+Der Spielstand bleibt im Browser unter derselben Adresse erhalten. Unter **Spielhilfe → Spielstand exportieren** lässt er sich zusätzlich als JSON sichern. Falls das Skript fehlt, liegt es im ZIP unter `farm-manager/update.sh`.
 
-ZIP-Prüfung ohne Anmeldung oder Upload:
+Paketprüfung ohne Anmeldung oder Upload:
 
 ```bash
-bash ~/update.sh --check ~/storage/downloads/ackerzeit-v0.2.0.zip
+bash ~/update.sh --check ~/storage/downloads/ackerzeit-v0.3.0.zip
 ```
 
-Falls das Skript fehlt: Das ZIP enthält `farm-manager/update.sh`. Diese Datei nach `~/update.sh` kopieren. Das Skript ist unverändert gegenüber dem vorliegenden 0.1.1-Repository.
-
-## Bedienung
+## Weitere Bedienung
 
 | Aktion | Bedienung |
 |---|---|
-| Kamera verschieben | Mit Maus oder einem Finger ziehen |
+| Kamera verschieben | Maus oder einen Finger ziehen |
 | Zoomen | Mausrad, zwei Finger oder + / − |
-| Nahansicht | Traktor |
-| Hofübersicht | Hof |
-| Feld verwalten | Auswählen → Feld antippen; alternativ Feldschaltfläche unter der Karte |
-| Fahren | Fahren → freie Stelle antippen; alternativ erst den Traktor antippen |
+| Traktor / Hof ansehen | Traktor beziehungsweise Hof in der Kartenleiste |
+| Feld auswählen | Direkt antippen oder die Feldschaltfläche unter der Karte |
+| Frei fahren | Fahren → freie Stelle antippen |
 | Anhalten | Stopp; bei fokussierter Karte auch Leertaste oder Escape |
-| Pausieren | Pause; Weiter setzt die Bewegung fort |
-| Feldauftrag ausführen | Auftrag planen → Nächster Tag |
-| Speichern / Übertragen | Automatisch; JSON-Export und -Import unter Hilfe |
+| Pausieren | Pause / Weiter; dauerhaft auch Unterbrechen / Fortsetzen am Feld |
+| Wachstum und Wetter | Nächster Tag / Bis zu 7 Tage |
+| Spielstand übertragen | JSON-Export und -Import unter Spielhilfe |
 
-Fahrziele in Gebäuden oder außerhalb der Karte werden abgewiesen. Die drei Hofgebäude werden mit Sicherheitsabstand umfahren. Die Lenkung ist eine vereinfachte Bewegung entlang des Fahrwegs; noch keine starre Fahrzeugphysik mit Rückwärtsrangieren oder Ackermann-Lenkung. Dekoration am Kartenrand und zusätzliche Katalogmodelle haben in diesem Schritt keine eigenen Kollisionskörper.
+Der Farmall umfährt die drei Hofgebäude mit Sicherheitsabstand. Ziele in Gebäuden und außerhalb der Karte werden abgewiesen. Die Fahrzeuglenkung und Wendemanöver sind vereinfachte Darstellungen, keine vollständige Fahrzeugphysik.
 
-Positionen werden beim Anhalten, Erreichen des Ziels, Verlassen der Hofansicht, Export und Ausblenden der Seite gespeichert. Ein Auftrag wird durch freie Fahrt nicht begonnen oder abgeschlossen. Nach einem Tageswechsel oder Menüwechsel steht der Traktor an seiner zuletzt gespeicherten Position; ein gerade angeklickter Fahrweg wird nicht fortgesetzt.
+Die Smartphone-Seite passt in den Bildschirm. Lange Verwaltungsansichten und Felddetails haben einen eigenen Scrollbereich. Auf kleinen Bildschirmen öffnet sich die Feldauswahl als untere Karte; nach dem Arbeitsstart wird sie geschlossen, damit die Feldarbeit sichtbar bleibt.
 
-## Bestehende Hofverwaltung
+## Vorhandene Hofverwaltung
 
-- Drei eigene Felder mit insgesamt 9 ha und ein kaufbares Feld mit 2 ha.
-- Sommergerste und Winterweizen, Aussaatfenster, Überwinterung und Ernte.
-- Wetter, vier Jahreszeiten, Bodenfeuchte, Wachstum und Ertragseinflüsse.
-- Bodenbearbeitung, Aussaat, Düngung und Ernte per Lohnunternehmer.
-- 8 Arbeitsstunden pro Tag, Auftragswarteschlange und Stornierung.
-- Diesel, Saatgut, Dünger, Traktorverschleiß und Wartung.
-- Lager, saisonale Verkaufspreise, Lagerausbau, Kredite und Buchungen.
+Drei eigene Felder mit insgesamt 9 ha und ein kaufbares Feld mit 2 ha; Sommergerste und Winterweizen mit Aussaatfenstern und Überwinterung; Wetter, Jahreszeiten, Feuchtigkeit und Ertragseinflüsse; Maschinenwartung; Betriebsmittel und Getreidelager; saisonale Verkaufspreise, Lagerausbau, Kredite und Buchungen.
 
-Zu Beginn im März die Felder bearbeiten, Sommergerste säen und düngen. Im Sommer reife Bestände durch den Lohnunternehmer ernten und verkaufen. Im September/Oktober Winterweizen bestellen. Wetterbedingte Pausen in der Arbeitsplanung beachten. „Bis zu 7 Tage“ hält bei wichtigen Ereignissen an.
+Ein erster Ablauf: Im März Boden bearbeiten, Sommergerste säen, düngen. Mit Tageswechseln bis zur Reife wachsen lassen. Im Sommer den Lohnunternehmer zur Ernte bestellen und das Getreide verkaufen. Anschließend Boden bearbeiten und im September/Oktober Winterweizen bestellen. Düngung ist im aktuellen Spiel eine optionale Ertragsverbesserung.
 
-## Lokal starten
+## Lokal starten und entwickeln
 
-Für die 3D-Module und GLB-Dateien ist ein HTTP-Server erforderlich. `index.html` direkt als `file://` zu öffnen reicht nicht aus.
+Alle Three.js-Abhängigkeiten und GLB-Modelle liegen im Paket. Zum Spielen sind kein npm-Build und kein CDN nötig. Ein HTTP-Server ist für die Module erforderlich:
 
 ```bash
 cd ~/ackerzeit-repos/BronkoKulitschka/ackerzeit
 python -m http.server 8000 --bind 127.0.0.1
 ```
 
-Im Browser `http://127.0.0.1:8000` öffnen. In Termux den Server weiterlaufen lassen, mit Strg+C beenden. Spielstände auf localhost und GitHub Pages sind getrennt; dafür den JSON-Export verwenden.
-
-Benötigt einen Browser mit WebGL 2 und ES-Modulen/Import Maps. Falls 3D nicht gestartet werden kann, bleiben die Verwaltungsmenüs nutzbar. Externe Internetverbindungen zum Nachladen von Bibliotheken sind nicht nötig. Dies ist noch keine installierbare Offline-PWA.
-
-## Projektstruktur
+Im Browser `http://127.0.0.1:8000` öffnen. Server mit Strg+C beenden. `file://` reicht nicht aus. Benötigt WebGL 2 sowie ES-Module und Import Maps. Bei einem 3D-Fehler bleiben die Verwaltungsmenüs nutzbar; sichtbare Feldarbeit benötigt eine funktionierende 3D-Ansicht. Keine installierbare Offline-PWA.
 
 | Datei | Aufgabe |
 |---|---|
-| `index.html`, `style.css` | App-Oberfläche mit fester Bildschirmhöhe |
-| `engine.js` | Bestehende Simulation; gegenüber 0.1.1 unverändert |
-| `app.js` | Menüs, Aktionen, Speichern und Verbindung zur 3D-Ansicht |
-| `farm3d.js` | Szene, Touch-Bedienung, Kamera und Fahrzeugdarstellung |
-| `world.js` | Kartenlayout, Hindernisse, Wegfindung und Positionsprüfung |
-| `model-loader.js` | GLB-Import und wiederverwendete Modellressourcen |
-| `data/models.json` | Modellkatalog und Platzierungen |
-| `assets/models/` | GLB-Modelle und Vorschaubilder |
-| `vendor/three/` | Lokal gebündelte Three.js-Version 0.180.0 samt MIT-Lizenz |
+| `engine.js` | Wirtschaft, Anbau, Reservierungen und gespeicherter Arbeitsfortschritt |
+| `app.js`, `index.html`, `style.css` | Feldaktionen und Verwaltungsoberfläche |
+| `farm3d.js` | Szene, Fahrzeuge, Geräte, sichtbare Bearbeitung und Bedienung |
+| `world.js` | Kartenlayout, Wegfindung, Geräteprofile und Arbeitsbahnen |
+| `model-loader.js`, `data/models.json` | Gemeinsamer GLB-Modellkatalog |
+| `assets/models/`, `vendor/three/` | Lokale Modelle und Three.js 0.180.0 samt MIT-Lizenz |
+| `tools/build-release.py` | ZIP mit vollständigem SHA-256-Manifest |
 | `update.sh` | Vorhandener Termux-Update-Workflow |
-| `release-manifest.json` | Paketliste und SHA-256-Prüfsummen |
-| `tests/` | Automatisierte Simulationstests und 3D-Wegfindungstests |
-
-Die alte Pixelkarten-Datei `isometric.js` wird durch `farm3d.js` und `world.js` ersetzt. Veraltete Dateien aus dem früheren Release-Manifest werden vom Update-Skript kontrolliert entfernt. Andere eigene Dateien bleiben erhalten.
-
-Tests:
+| `tests/`, `TESTBERICHT.md` | Automatisierte Prüfungen und Prüfumfang |
 
 ```bash
 node --test tests/*.test.cjs
+python3 tools/build-release.py
 ```
 
-Der konkrete Prüfumfang und offene Grenzen stehen in `TESTBERICHT.md`.
-
-## Noch nicht enthalten
-
-Ankuppeln, Transport und Laden, 3D-Anbaugeräte, steuerbare zusätzliche Fahrzeuge, frei platzierbare Gebäude, Tiere und Personal sind nächste Ausbauschritte. Kartenflächen sind eine übersichtliche Darstellung und keine maßstabsgetreue Abbildung der angegebenen Hektar. Wirtschaft, Wetter und Pflanzenwachstum bleiben vereinfachte Spielmodelle.
-
-Für viele gleichzeitig sichtbare Modelle können später reduzierte Detailstufen und zusammengefasste Materialien nötig werden. Der Farmall enthält rund 23.000 Dreiecke. Die Darstellung ist auf maximal 30 Bilder pro Sekunde begrenzt, die Pixelauflösung auf höchstens 1,5-fache Geräteauflösung. Bei unsichtbarem Tab oder nach Verlassen der Hofansicht wird die Animationsschleife beendet. Reduzierte Bewegung im Betriebssystem schaltet automatische Niederschlagspartikel aus; eine ausdrücklich gestartete Fahrt bleibt möglich.
+Weitere Modelle lassen sich über den bestehenden Katalog vorbereiten; siehe `MODELLKATALOG.md`. Geräte und Mähdrescher sind momentan einfache Code-Geometrien. Noch offen sind manuelles Ankuppeln, Abfahrer und Transportketten, Befüllung am Hof, mehrere gleichzeitig arbeitende Maschinen, Personalverwaltung, zusätzliche Bodenpflege wie Kalken und Pflanzenschutz, Tiere und frei platzierbare Gebäude. Diese Funktionen werden nicht als vorhandene FS25-Entsprechungen dargestellt.

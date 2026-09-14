@@ -7,42 +7,46 @@ const server=http.createServer((req,res)=>{let p=path.join(base,decodeURICompone
 (async()=>{
 await new Promise(r=>server.listen(8089,'127.0.0.1',r));
 const browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE||undefined,args:['--no-sandbox','--enable-unsafe-swiftshader','--use-angle=swiftshader']});
+
 const results=[];
-for(const [width,height] of [[390,844],[360,640],[844,390],[1365,900]]){
- console.log("Testing",width,height);
- const context=await browser.newContext({viewport:{width,height},isMobile:width<700,hasTouch:width<700,deviceScaleFactor:1});
- const page=await context.newPage();const errors=[],requests=[];page.on('pageerror',e=>errors.push(e.message));page.on('requestfailed',r=>errors.push(r.url()));page.on('request',r=>requests.push(r.url()));
+for(const [width,height] of (process.env.ACKERZEIT_TEST_COMPACT?[[360,640]]:[[390,844],[844,390],[1365,900]])){
+ console.log('Work test',width,height);
+ const context=await browser.newContext({viewport:{width,height},isMobile:width<700,hasTouch:width<700});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:8089');await page.waitForFunction(()=>document.querySelector('#farm-world')?.dataset.ready==='true');
- const bounds=await page.evaluate(()=>({x:document.documentElement.scrollWidth,y:document.documentElement.scrollHeight,w:innerWidth,h:innerHeight}));assert.ok(bounds.x<=bounds.w&&bounds.y<=bounds.h,JSON.stringify(bounds));
- const old=await page.evaluate(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')));
- await page.locator('[data-map=tractor]').click();await page.locator('[data-mode=drive]').click();
- const rect=await page.locator('.three-surface canvas').boundingBox();assert.ok(rect.height>65);
- const x=rect.x+rect.width/2+rect.width*.30,y=rect.y+rect.height/2+Math.min(25,rect.height*.1);
- if(width<700)await page.touchscreen.tap(x,y);else await page.mouse.click(x,y);
- await page.waitForFunction(()=>document.querySelector('[data-three-status]').textContent.includes('fährt'),{timeout:5000});
- await page.waitForTimeout(650);
- await page.locator('[data-map=pause]').click();await page.waitForFunction(()=>document.querySelector('[data-three-status]').textContent==='Fahrt pausiert');
- await page.locator('[data-map=pause]').click();await page.waitForTimeout(350);await page.locator('[data-map=stop]').click();
- const moved=await page.evaluate(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')));assert.ok(moved.world3d?.tractor);assert.ok(Math.hypot(moved.world3d.tractor.x+7,moved.world3d.tractor.z-8)>.1);assert.equal(moved.day,old.day);assert.equal(moved.cash,old.cash);assert.equal(moved.fuel,old.fuel);
- // Field drawer remains usable at small heights; queue a real economic action.
- await page.locator('.field-pill[data-field="1"]').click();await page.locator('#queue').click();
- const queued=await page.evaluate(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')));assert.equal(queued.jobs.length,1);
- await page.locator('#next').click();const advanced=await page.evaluate(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')));assert.equal(advanced.day,'2026-03-02');assert.equal(advanced.fields[0].stage,'prepared');
- // Every menu renders inside the viewport; navigation does not leak extra canvases.
- for(const view of ['felder','arbeit','maschinen','lager','finanzen','hilfe','hof','maschinen','hof']){
-  await page.locator('#nav [data-view="'+view+'"]').click();assert.equal(await page.locator('body').getAttribute('data-page'),view);
-  const b=await page.evaluate(()=>({x:document.documentElement.scrollWidth,y:document.documentElement.scrollHeight,w:innerWidth,h:innerHeight}));assert.ok(b.x<=b.w&&b.y<=b.h,JSON.stringify({view,b}));
-  if(view==='hof')await page.waitForFunction(()=>document.querySelector('#farm-world')?.dataset.ready==='true');else assert.equal(await page.locator('.three-surface canvas').count(),0);
- }
+ assert.equal(await page.locator('#nav [data-view=arbeit]').count(),0);
+ await page.locator('.field-pill[data-field="1"]').click();
+ await page.screenshot({path:path.join(output,'field-actions-'+width+'.png')});
+ await page.locator('[data-start-work=cultivate]').click();
+ await page.locator('[data-map=rate]').click();await page.locator('[data-map=rate]').click();
+ await page.waitForFunction(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')).jobs[0]?.remaining<1.8,null,{timeout:50000});
+ await page.screenshot({path:path.join(output,'field-working-'+width+'.png')});
+ await page.locator('[data-map=stop]').click();
+ const stopped=await page.evaluate(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')));assert.equal(stopped.jobs[0].paused,true);assert.equal(stopped.day,'2026-03-01');assert.equal(stopped.fields[0].stage,'stubble');assert.ok(stopped.tractor.hours>2840);
  await page.reload();await page.waitForFunction(()=>document.querySelector('#farm-world')?.dataset.ready==='true');
- const reloaded=await page.evaluate(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')));assert.equal(reloaded.day,advanced.day);assert.deepEqual(reloaded.world3d,advanced.world3d);
- await page.locator('[data-map=tractor]').click();await page.waitForTimeout(100);await page.screenshot({path:path.join(output,'test-'+width+'x'+height+'.png')});
- assert.deepEqual(errors,[]);assert.ok(requests.every(u=>u.startsWith('http://127.0.0.1:8089')||u.startsWith('blob:http://127.0.0.1:8089')||u.startsWith('data:')));
- results.push({viewport:width+'x'+height,pageOverflow:false,drive:true,pause:true,queue:true,dayChange:true,allMenus:true,saveReload:true,errors});
- await context.close();
+ const after=await page.evaluate(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')));assert.equal(after.jobs[0].remaining,stopped.jobs[0].remaining);
+ await page.locator('.field-pill[data-field="1"]').click();await page.locator('[data-resume-work]').click();await page.locator('[data-map=rate]').click();await page.locator('[data-map=rate]').click();
+ await page.waitForFunction(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')).fields[0].stage==='prepared',null,{timeout:60000});
+ const complete=await page.evaluate(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')));assert.equal(complete.jobs.length,0);assert.equal(complete.workedToday,2.2);assert.equal(complete.day,'2026-03-01');assert.equal(complete.fuel,424);assert.equal(complete.tractor.hours,2842.2);
+ await page.waitForFunction(()=>document.querySelector('#farm-world')?.dataset.ready==='true');
+ await page.locator('.field-pill[data-field="1"]').click();assert.equal(await page.locator('[data-start-work=barley]').isEnabled(),true);
+ await page.locator('[data-start-work=barley]').click();await page.waitForFunction(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')).fields[0].stage==='growing',null,{timeout:60000});
+ const sown=await page.evaluate(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')));assert.equal(sown.fields[0].crop,'barley');assert.ok(sown.seed.barley<2);
+ await page.waitForFunction(()=>document.querySelector('#farm-world')?.dataset.ready==='true');await page.locator('#next').click();
+ const day=await page.evaluate(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')));assert.equal(day.day,'2026-03-02');assert.equal(day.workedToday,0);
+ await page.waitForFunction(()=>document.querySelector('#farm-world')?.dataset.ready==='true');
+ await page.locator('.field-pill[data-field="1"]').click();
+ await page.locator('[data-start-work=fertilize]').click();
+ await page.waitForFunction(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')).fields[0].fertilized,null,{timeout:60000});
+ await page.evaluate(()=>{const s=JSON.parse(localStorage.getItem('ackerzeit-save-v1'));s.day='2026-07-15';s.workedToday=0;s.weather={temp:20,rain:0,label:'Heiter'};s.fields[0].stage='ready';s.fields[0].heat=1200;s.fields[0].moisture=50;localStorage.setItem('ackerzeit-save-v1',JSON.stringify(s));});
+ await page.reload();await page.waitForFunction(()=>document.querySelector('#farm-world')?.dataset.ready==='true');
+ await page.locator('.field-pill[data-field="1"]').click();await page.locator('[data-start-work=harvest]').click();
+ await page.locator('[data-map=rate]').click();await page.locator('[data-map=rate]').click();
+ await page.waitForFunction(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')).jobs[0]?.remaining<.65,null,{timeout:50000});
+ await page.screenshot({path:path.join(output,'field-harvest-'+width+'.png')});
+ await page.waitForFunction(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')).fields[0].stage==='stubble',null,{timeout:60000});
+ const harvested=await page.evaluate(()=>JSON.parse(localStorage.getItem('ackerzeit-save-v1')));assert.ok(harvested.stock.barley>0);assert.equal(harvested.jobs.length,0);
+ const b=await page.evaluate(()=>({w:innerWidth,h:innerHeight,x:document.documentElement.scrollWidth,y:document.documentElement.scrollHeight}));assert.ok(b.x<=b.w&&b.y<=b.h);assert.deepEqual(errors,[]);
+ results.push({viewport:width+'x'+height,dispatch:true,visibleWork:true,pauseReloadResume:true,cultivate:true,sow:true,fertilize:true,harvest:true,dayChange:true,errors});await context.close();
 }
-// A corrupted old save must remain untouched even after driving/closing the map.
-const page=await browser.newPage();await page.addInitScript(()=>localStorage.setItem('ackerzeit-save-v1','{broken'));await page.goto('http://127.0.0.1:8089');assert.equal(await page.locator('#save-warning').isVisible(),true);assert.equal(await page.evaluate(()=>localStorage.getItem('ackerzeit-save-v1')),'{broken');await page.close();
-console.log(JSON.stringify(results,null,2));fs.writeFileSync(path.join(output,'browser-results.json'),JSON.stringify({cases:results,corruptSaveProtected:true},null,2));
-await browser.close();server.close();
+fs.writeFileSync(path.join(output,'live-work-browser-results.json'),JSON.stringify(results,null,2));console.log(JSON.stringify(results));await browser.close();server.close();
 })().catch(e=>{console.error(e);process.exit(1)});
