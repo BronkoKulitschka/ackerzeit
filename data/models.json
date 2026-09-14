@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "units": "meters",
+  "models": [
+    {
+      "id": "farmall-d320",
+      "name": "McCormick Farmall D-320",
+      "category": "tractor",
+      "file": "assets/models/farmall-d320.glb",
+      "preview": "assets/models/farmall-d320.png",
+      "scale": 1,
+      "specs": { "powerPS": 20, "maxSpeedKmh": 20 },
+      "driving": { "speedMps": 2.4, "acceleration": 1.4, "collisionRadius": 1.55, "wheelbase": 1.78, "frontWheelRadius": 0.38, "rearWheelRadius": 0.635 },
+      "parts": {
+        "frontWheels": ["Wheel_Front_L", "Wheel_Front_R"],
+        "rearWheels": ["Wheel_Rear_L", "Wheel_Rear_R"],
+        "steering": ["Steer_Front_L", "Steer_Front_R"],
+        "steeringWheel": "Steering_Wheel"
+      },
+      "sockets": { "trailer": "Socket_Trailer", "implement": "Socket_Implement", "driver": "Socket_Driver" }
+    }
+  ],
+  "instances": [
+    { "id": "tractor-1", "model": "farmall-d320", "position": [-7, 0, 8], "rotationY": -1.9 }
+  ]
+}

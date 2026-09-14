@@ -1,132 +1,111 @@
-# Ackerzeit · Farm Manager 0.1.1
+# Ackerzeit · Farm Manager 0.2.0
 
-Ein deutschsprachiger Browser-Prototyp: Pixelart-Hofkarte, Managementmenüs und ein spielbares Ackerbaujahr. Reines HTML, CSS und JavaScript. Keine Installation von npm-Paketen, kein Build, keine externen Schriftarten oder Bilddateien.
+Ein deutschsprachiges Browser-Farmspiel mit isometrischer 3D-Hofansicht und saisonaler Hofverwaltung. Weiterentwicklung des vorhandenen Ackerzeit 0.1.1, keine separate Demo. HTML, CSS und JavaScript; alle 3D-Abhängigkeiten und das Farmall-Modell liegen im Paket. Zum Spielen wird kein npm-Build und kein CDN benötigt.
 
-## Neu in Version 0.1.1
+## Neu: der Farmall auf deinem Hof
 
-- Echte isometrische 2:1-Pixelansicht mit räumlichen Gebäuden, Feldrauten, Bäumen und sichtbarer Bodenkante.
-- Fahrender Traktor mit Anbaugerät oder Mähdrescher als Vorschau des ersten ausführbaren Feldauftrags. Bei blockierten Aufträgen bleibt die Maschine am Hof.
-- Bewegter Schornsteinrauch, Windrad, Vögel und wetterabhängiger Regen oder Schnee.
-- Animation pausieren/starten; Betriebssystem-Einstellung für reduzierte Bewegung wird berücksichtigt.
-- Höchstens 20 Animationsbilder pro Sekunde. Keine Animationsschleife bei unsichtbarem Tab, außerhalb des sichtbaren Kartenbereichs oder nach Verlassen der Hofansicht.
-- Antippen trifft die isometrischen Feldflächen. Die Feldschaltflächen bleiben als Alternative verfügbar.
+- Echte 3D-Ansicht mit dem McCormick Farmall D-320, Hofgebäuden, Feldern und jahreszeitlichen Farben.
+- Ziele anklicken oder antippen; der Traktor fährt auf kollisionsgeprüften Wegen um die Hofgebäude. Räder und Lenkung bewegen sich passend dazu.
+- Kamera verschieben und zoomen, Nahansicht des Traktors, Hofübersicht, Pause und Stopp.
+- Auf dem Smartphone feste untere Navigation und eine in den Bildschirm passende Hofansicht. Lange Verwaltungsansichten und Felddetails scrollen innerhalb ihres Bereichs; die Seite selbst scrollt nicht.
+- Gemeinsamer GLB-Modellkatalog für zusätzliche Modelle. Siehe `MODELLKATALOG.md`.
+- Optionale Fahrzeugposition im vorhandenen Spielstand. Spielstände aus 0.1.0 und 0.1.1 bleiben lesbar.
 
-Die Animation ist eine **Arbeitsvorschau**. Fortschritt, Arbeitsverbrauch und Wachstum laufen weiterhin über den Tageswechsel. Bestehende Spielstände aus 0.1.0 sind kompatibel; das Format und der Spielkern bleiben gleich. Das bisherige `update.sh` kann das neue ZIP übernehmen.
+Die **freie Fahrt** dient in diesem Schritt der Bewegung auf dem Hof. Sie verbraucht keinen Diesel, bearbeitet keine Felder und lässt die Spielzeit nicht verstreichen. Feldaufträge, Dieselreservierung, Wachstum, Wetter, Einnahmen und Ausgaben laufen weiter über den Tageswechsel. Die vorhandene wirtschaftliche Spielbalance wurde nicht neu kalibriert. Der Farmall ersetzt die bisherige grafische Darstellung des Standardtraktors.
 
-## Enthalten
+## Update in deinem Termux-Workflow
+
+Lade **ackerzeit-v0.2.0.zip** in den Android-Downloadordner. Dein vorhandenes Ackerzeit-Update-Skript aus 0.1.1 kann dieses Paket verarbeiten:
+
+```bash
+bash ~/update.sh ~/storage/downloads/ackerzeit-v0.2.0.zip BronkoKulitschka/ackerzeit
+```
+
+Danach den bisherigen Ackerzeit-Spiellink öffnen und neu laden. GitHub Pages braucht gegebenenfalls etwas Zeit, bis der neue Commit veröffentlicht wurde. Falls du einen alten Stand siehst, die Seite vollständig neu laden.
+
+Entpacken von Hand ist nicht notwendig. Das Skript prüft das Paket, übernimmt die Dateien, erstellt einen normalen Commit und pusht in dein Repository. Es führt keinen Force-Push aus. Der Spielstand liegt im Browser auf derselben Adresse; das Update löscht ihn nicht. Ein Export unter **Hilfe → Spielstand exportieren** ist vor Updates sinnvoll.
+
+ZIP-Prüfung ohne Anmeldung oder Upload:
+
+```bash
+bash ~/update.sh --check ~/storage/downloads/ackerzeit-v0.2.0.zip
+```
+
+Falls das Skript fehlt: Das ZIP enthält `farm-manager/update.sh`. Diese Datei nach `~/update.sh` kopieren. Das Skript ist unverändert gegenüber dem vorliegenden 0.1.1-Repository.
+
+## Bedienung
+
+| Aktion | Bedienung |
+|---|---|
+| Kamera verschieben | Mit Maus oder einem Finger ziehen |
+| Zoomen | Mausrad, zwei Finger oder + / − |
+| Nahansicht | Traktor |
+| Hofübersicht | Hof |
+| Feld verwalten | Auswählen → Feld antippen; alternativ Feldschaltfläche unter der Karte |
+| Fahren | Fahren → freie Stelle antippen; alternativ erst den Traktor antippen |
+| Anhalten | Stopp; bei fokussierter Karte auch Leertaste oder Escape |
+| Pausieren | Pause; Weiter setzt die Bewegung fort |
+| Feldauftrag ausführen | Auftrag planen → Nächster Tag |
+| Speichern / Übertragen | Automatisch; JSON-Export und -Import unter Hilfe |
+
+Fahrziele in Gebäuden oder außerhalb der Karte werden abgewiesen. Die drei Hofgebäude werden mit Sicherheitsabstand umfahren. Die Lenkung ist eine vereinfachte Bewegung entlang des Fahrwegs; noch keine starre Fahrzeugphysik mit Rückwärtsrangieren oder Ackermann-Lenkung. Dekoration am Kartenrand und zusätzliche Katalogmodelle haben in diesem Schritt keine eigenen Kollisionskörper.
+
+Positionen werden beim Anhalten, Erreichen des Ziels, Verlassen der Hofansicht, Export und Ausblenden der Seite gespeichert. Ein Auftrag wird durch freie Fahrt nicht begonnen oder abgeschlossen. Nach einem Tageswechsel oder Menüwechsel steht der Traktor an seiner zuletzt gespeicherten Position; ein gerade angeklickter Fahrweg wird nicht fortgesetzt.
+
+## Bestehende Hofverwaltung
 
 - Drei eigene Felder mit insgesamt 9 ha und ein kaufbares Feld mit 2 ha.
 - Sommergerste und Winterweizen, Aussaatfenster, Überwinterung und Ernte.
-- Tägliches Wetter, vier Jahreszeiten, Bodenfeuchte, Wachstum und Ertragseinflüsse.
+- Wetter, vier Jahreszeiten, Bodenfeuchte, Wachstum und Ertragseinflüsse.
 - Bodenbearbeitung, Aussaat, Düngung und Ernte per Lohnunternehmer.
-- Gemeinsame Arbeitskapazität von 8 Stunden pro Tag; Warteschlange mit Stornierung.
+- 8 Arbeitsstunden pro Tag, Auftragswarteschlange und Stornierung.
 - Diesel, Saatgut, Dünger, Traktorverschleiß und Wartung.
-- Getreidelager, saisonale Verkaufspreise, Lagerausbau, Kredite und Buchungen.
-- Automatisches lokales Speichern sowie JSON-Export und -Import.
-- Responsive Darstellung für Smartphone, Tablet und Desktop.
+- Lager, saisonale Verkaufspreise, Lagerausbau, Kredite und Buchungen.
 
-## Schnellstart in Termux
+Zu Beginn im März die Felder bearbeiten, Sommergerste säen und düngen. Im Sommer reife Bestände durch den Lohnunternehmer ernten und verkaufen. Im September/Oktober Winterweizen bestellen. Wetterbedingte Pausen in der Arbeitsplanung beachten. „Bis zu 7 Tage“ hält bei wichtigen Ereignissen an.
 
-1. Erstelle auf GitHub ein **eigenes, leeres Repository**, beispielsweise `farm-manager`. Wähle für kostenloses GitHub Pages ein öffentliches Repository. Eine README im ansonsten leeren Repository ist ebenfalls möglich.
-2. Lade `ackerzeit-v0.1.1.zip` und die separat bereitgestellte `update.sh` in den Android-Ordner **Download**.
-3. Führe einmalig in Termux aus:
+## Lokal starten
+
+Für die 3D-Module und GLB-Dateien ist ein HTTP-Server erforderlich. `index.html` direkt als `file://` zu öffnen reicht nicht aus.
 
 ```bash
-pkg update
-pkg install git python gh
-termux-setup-storage
-gh auth login --hostname github.com --git-protocol https --web
-gh auth setup-git
-cp ~/storage/downloads/update.sh ~/update.sh
-```
-
-Erlaube Termux den Speicherzugriff. Folge beim GitHub-Login dem angezeigten Gerätecode. Zugangsdaten gehören weder in dieses Projekt noch in einen Chat.
-
-4. Erster Upload – `DEIN-NAME/farm-manager` durch dein echtes Repository ersetzen:
-
-```bash
-bash ~/update.sh ~/storage/downloads/ackerzeit-v0.1.1.zip DEIN-NAME/farm-manager
-```
-
-Das Skript prüft das ZIP, klont das Repository nach `~/ackerzeit-repos/DEIN-NAME/farm-manager`, übernimmt die Projektdateien, erstellt einen Commit und pusht auf den Standardbranch. Falls Git noch keine Autorenangaben hat, verwendet es lokal im Projekt deinen GitHub-Namen und deine GitHub-No-Reply-Adresse. Das zuletzt erfolgreich verwendete Repository wird gespeichert.
-
-5. Auf GitHub einmalig öffnen: **Settings → Pages → Build and deployment → Source: Deploy from a branch**. Den vom Skript ausgegebenen Branch (meist `main`) und **/(root)** wählen und speichern. Nach erfolgreicher Veröffentlichung zeigt GitHub dort den Spiellink an.
-
-Beim üblichen Repositorynamen lautet er `https://DEIN-NAME.github.io/farm-manager/`. Verwende im Zweifel immer den Link aus den Pages-Einstellungen. Die Einrichtung ist durch die [GitHub-Pages-Dokumentation](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site) beschrieben. Der [GitHub-CLI-Login](https://cli.github.com/manual/gh_auth_login) verwendet die offizielle Geräteanmeldung; [auth setup-git](https://cli.github.com/manual/gh_auth_setup-git) verbindet Git mit dieser Anmeldung.
-
-## Spätere Updates
-
-Lade die aktuelle ZIP herunter und aktualisiere dein Repository:
-
-```bash
-bash ~/update.sh ~/storage/downloads/ackerzeit-v0.1.1.zip BronkoKulitschka/ackerzeit
-```
-
-Entpacken von Hand ist nicht notwendig. Der Spielstand liegt im Browser und wird durch Git-Updates nicht gelöscht. Die aktuelle Version kann Spielstände des Formats 1 lesen.
-
-Das Skript im Repository wird mit jedem Paket aktualisiert. Wenn eine neue Skriptversion mitgeliefert wurde, kopiere sie für spätere Aufrufe aus `~/ackerzeit-repos/DEIN-NAME/farm-manager/update.sh` nach `~/update.sh` oder lade die separat gelieferte Version herunter.
-
-### Verhalten bei Problemen
-
-- **Lokale Änderungen:** Das Skript stoppt vor der Übernahme. Bearbeite oder sichere deine Änderungen im angegebenen Checkout. Es gibt keinen automatischen Reset oder Stash.
-- **Git-Konflikte:** Nur Fast-Forward wird zugelassen. Das Skript überschreibt keine auseinander gelaufene Historie.
-- **Push unterbrochen:** Der Commit bleibt lokal erhalten. Führe denselben Aufruf erneut aus.
-- **Anderes Projekt im Ziel:** Die Erstinstallation verweigert fremde Projektordner. Verwende ein separates Repository.
-- **Defektes ZIP:** Dateiliste und SHA-256-Prüfsummen werden vor Git-Aktionen geprüft. Diese Prüfsummen erkennen Beschädigungen; sie sind keine digitale Signatur.
-- **Veraltete Dateien:** Nur Dateien aus dem früheren Ackerzeit-Manifest werden bei Bedarf entfernt. Andere Dateien bleiben erhalten.
-- **Speichern im Browser blockiert:** Das Spiel zeigt eine Meldung. Nutze dann Spielhilfe → Spielstand exportieren. Eine defekte vorhandene Speicherung wird beim Laden nicht still überschrieben.
-
-ZIP-Prüfung ohne Git-Anmeldung oder Upload:
-
-```bash
-bash ~/update.sh --check ~/storage/downloads/ackerzeit-v0.1.1.zip
-```
-
-## Ohne Veröffentlichung lokal spielen
-
-Auf einem Desktop die ZIP entpacken und `farm-manager/index.html` im Browser öffnen. Zuverlässiger ist ein lokaler Webserver. In Termux nach dem Upload:
-
-```bash
-cd ~/ackerzeit-repos/DEIN-NAME/farm-manager
+cd ~/ackerzeit-repos/BronkoKulitschka/ackerzeit
 python -m http.server 8000 --bind 127.0.0.1
 ```
 
-Im Browser `http://127.0.0.1:8000` öffnen. Termux dabei weiterlaufen lassen. Mit Strg+C beenden. Spielstände auf localhost und GitHub Pages sind getrennt; sie können per JSON-Export übertragen werden.
+Im Browser `http://127.0.0.1:8000` öffnen. In Termux den Server weiterlaufen lassen, mit Strg+C beenden. Spielstände auf localhost und GitHub Pages sind getrennt; dafür den JSON-Export verwenden.
 
-## So spielst du das erste Jahr
-
-1. Im März die Felder nacheinander bearbeiten, mit Sommergerste bestellen und düngen.
-2. Aufträge mit „Nächster Tag“ abarbeiten. Bei Nässe oder Frost warten.
-3. Zeit bis zur Erntereife verstreichen lassen. „Bis zu 7 Tage“ hält bei fertigen Aufträgen, neuen erntereifen Feldern und Monatswechsel an.
-4. Im Juli bis September den Lohnunternehmer ernten lassen und das Getreide unter Lager & Markt verkaufen.
-5. Die Stoppeln bearbeiten und im September/Oktober Winterweizen säen. Er bleibt über Winter stehen und reift im nächsten Sommer.
-6. Rechtzeitig Diesel, Saatgut und Dünger auffüllen. Den Traktor bei Bedarf warten.
-
-Die realen Kalenderdaten laufen über Schaltjahre hinweg. Das angezeigte Wetter wird beim Weitergehen für den aktuellen Tag verarbeitet; anschließend beginnt der nächste Tag. Es gibt kein Wachstum in echter Offline-Zeit.
-
-## Grenzen von Version 0.1
-
-Dies ist die erste spielbare Grundlage, keine fertige Landwirtschaftssimulation. Wetter, Erträge, Kosten und Wachstumswerte sind vereinfachte Spielmodelle. Jahreszeiten, Aussaatfenster und Abhängigkeiten bilden grundlegende Arbeitsabläufe ab, ersetzen aber keine fachliche Anbauplanung. Es werden keine aktuellen Marktpreise abgerufen.
-
-Tierhaltung, frei platzierbare Gebäude, mehrere Traktoren, Personal, detaillierte Bodenarten und Nährstoffbilanzen, Unkraut, Pflanzenschutz, Steuern und Förderungen sind noch nicht enthalten. Hofkosten und Kreditmodell sind bewusst einfach. Wartung ist sofortig. Teilweise stornierte Feldarbeit muss erneut begonnen werden. Diesel und Material werden beim Planen reserviert; der ungenutzte Anteil kommt bei Stornierung zurück.
+Benötigt einen Browser mit WebGL 2 und ES-Modulen/Import Maps. Falls 3D nicht gestartet werden kann, bleiben die Verwaltungsmenüs nutzbar. Externe Internetverbindungen zum Nachladen von Bibliotheken sind nicht nötig. Dies ist noch keine installierbare Offline-PWA.
 
 ## Projektstruktur
 
 | Datei | Aufgabe |
-| --- | --- |
-| `index.html` | Einstieg und Grundgerüst |
-| `style.css` | Responsive Oberfläche |
-| `engine.js` | Spielregeln und Spielstandprüfung, unabhängig von der Oberfläche |
-| `app.js` | Menüs, Bedienung, Speichern und Kartenanbindung |
-| `isometric.js` | Isometrische Pixelgrafik, Feldauswahl und Animationssteuerung |
-| `update.sh` | ZIP prüfen und per Git auf GitHub aktualisieren |
-| `release-manifest.json` | Paketversion und SHA-256-Dateiprüfsummen |
-| `tests/engine.test.cjs` | Reproduzierbare Prüfung der Simulation |
+|---|---|
+| `index.html`, `style.css` | App-Oberfläche mit fester Bildschirmhöhe |
+| `engine.js` | Bestehende Simulation; gegenüber 0.1.1 unverändert |
+| `app.js` | Menüs, Aktionen, Speichern und Verbindung zur 3D-Ansicht |
+| `farm3d.js` | Szene, Touch-Bedienung, Kamera und Fahrzeugdarstellung |
+| `world.js` | Kartenlayout, Hindernisse, Wegfindung und Positionsprüfung |
+| `model-loader.js` | GLB-Import und wiederverwendete Modellressourcen |
+| `data/models.json` | Modellkatalog und Platzierungen |
+| `assets/models/` | GLB-Modelle und Vorschaubilder |
+| `vendor/three/` | Lokal gebündelte Three.js-Version 0.180.0 samt MIT-Lizenz |
+| `update.sh` | Vorhandener Termux-Update-Workflow |
+| `release-manifest.json` | Paketliste und SHA-256-Prüfsummen |
+| `tests/` | Automatisierte Simulationstests und 3D-Wegfindungstests |
 
-Optionaler Entwicklertest mit Node.js:
+Die alte Pixelkarten-Datei `isometric.js` wird durch `farm3d.js` und `world.js` ersetzt. Veraltete Dateien aus dem früheren Release-Manifest werden vom Update-Skript kontrolliert entfernt. Andere eigene Dateien bleiben erhalten.
+
+Tests:
 
 ```bash
 node --test tests/*.test.cjs
 ```
 
-Die Pixelgrafik entsteht aus eigenen Canvas-Sprites. Keine Bildlizenz oder Online-Verbindung wird zum Laden des Spiels benötigt. Die Weiterentwicklung erfolgt in kleinen, vollständig spielbaren Schritten.
+Der konkrete Prüfumfang und offene Grenzen stehen in `TESTBERICHT.md`.
+
+## Noch nicht enthalten
+
+Ankuppeln, Transport und Laden, 3D-Anbaugeräte, steuerbare zusätzliche Fahrzeuge, frei platzierbare Gebäude, Tiere und Personal sind nächste Ausbauschritte. Kartenflächen sind eine übersichtliche Darstellung und keine maßstabsgetreue Abbildung der angegebenen Hektar. Wirtschaft, Wetter und Pflanzenwachstum bleiben vereinfachte Spielmodelle.
+
+Für viele gleichzeitig sichtbare Modelle können später reduzierte Detailstufen und zusammengefasste Materialien nötig werden. Der Farmall enthält rund 23.000 Dreiecke. Die Darstellung ist auf maximal 30 Bilder pro Sekunde begrenzt, die Pixelauflösung auf höchstens 1,5-fache Geräteauflösung. Bei unsichtbarem Tab oder nach Verlassen der Hofansicht wird die Animationsschleife beendet. Reduzierte Bewegung im Betriebssystem schaltet automatische Niederschlagspartikel aus; eine ausdrücklich gestartete Fahrt bleibt möglich.
